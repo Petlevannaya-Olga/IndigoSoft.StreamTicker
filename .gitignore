@@ -1,0 +1,12 @@
+/.vs
+/.idea
+/IndigoSoft.StreamTicker.Application/obj
+/IndigoSoft.StreamTicker.Application/bin
+/IndigoSoft.StreamTicker.Contracts/obj
+/IndigoSoft.StreamTicker.Contracts/bin
+/IndigoSoft.StreamTicker.Domain/obj
+/IndigoSoft.StreamTicker.Domain/bin
+/IndigoSoft.StreamTicker.Infrastructure/obj
+/IndigoSoft.StreamTicker.Infrastructure/bin
+/IndigoSoft.StreamTicker.Presentation/obj
+/IndigoSoft.StreamTicker.Presentation/bin
