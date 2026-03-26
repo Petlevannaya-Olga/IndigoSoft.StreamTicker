@@ -11,15 +11,15 @@ public class TickRepository : ITickRepository
     {
         _dbContext = dbContext;
         // создаём БД и таблицу при старте
-        _dbContext.Database.EnsureCreated(); 
+        _dbContext.Database.EnsureCreated();
     }
 
-    public async Task SaveBatchAsync(IEnumerable<Tick> ticks)
+    public async Task SaveBatchAsync(IEnumerable<Tick> ticks, CancellationToken ct)
     {
         var list = ticks.ToList();
         if (list.Count == 0) return;
 
-        await _dbContext.Ticks.AddRangeAsync(list);
-        await _dbContext.SaveChangesAsync();
+        await _dbContext.Ticks.AddRangeAsync(list, ct);
+        await _dbContext.SaveChangesAsync(ct);
     }
 }

@@ -37,29 +37,26 @@ try
         })
         .ConfigureServices(services =>
         {
-            services.AddSingleton<BinanceWebSocketPolicy>();
-            services.AddSingleton<KrakenWebSocketPolicy>();
-
-            services.AddSingleton<IWebSocketClient>(sp =>
+            services.AddSingleton<IWebSocketClient<Tick>>(sp =>
             {
                 var logger = sp.GetRequiredService<ILogger<BinanceWebSocketClient>>();
                 var policies = sp.GetRequiredService<BinanceWebSocketPolicy>();
                 var symbols = new[] { "btcusdt","ethusdt","ethbtc","ltcbtc","bnbbtc","neobtc","qtumeth","eoseth","snteth","bnteth", };
                 return new BinanceWebSocketClient(symbols, policies, logger);
             });
-
-            services.AddSingleton<IWebSocketClient>(sp =>
-            {
-                var logger = sp.GetRequiredService<ILogger<KrakenWebSocketClient>>();
-                var policies = sp.GetRequiredService<KrakenWebSocketPolicy>();
-                var symbols = new[] { "XBT/USD", "ETH/USD", "SOL/USD", "BTC/USDT", "ETH/USDT" };
-                return new KrakenWebSocketClient(symbols, policies, logger);
-            });
+            //
+            // services.AddSingleton<IWebSocketClient>(sp =>
+            // {
+            //     var logger = sp.GetRequiredService<ILogger<KrakenWebSocketClient>>();
+            //     var policies = sp.GetRequiredService<KrakenWebSocketPolicy>();
+            //     var symbols = new[] { "XBT/USD", "ETH/USD", "SOL/USD", "BTC/USDT", "ETH/USDT" };
+            //     return new KrakenWebSocketClient(symbols, policies, logger);
+            // });
 
             services.AddSingleton<IDeduplicator<Tick>, SlidingWindowDeduplicator<Tick>>();
             services.AddDbContext<TickDbContext>(opt => opt.UseSqlite("Data Source=ticks.db"));
             services.AddScoped<ITickRepository, TickRepository>();
-            services.AddHostedService<Pipeline>();
+            services.AddHostedService<DataflowPipeline>();
         })
         .Build();
 
