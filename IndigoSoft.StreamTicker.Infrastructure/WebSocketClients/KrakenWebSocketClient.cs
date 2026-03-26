@@ -15,7 +15,7 @@ namespace IndigoSoft.StreamTicker.Infrastructure.WebSocketClients;
 
 public class KrakenWebSocketClient(
     string[] symbols,
-    KrakenPolicies policies,
+    KrakenWebSocketPolicy webSocketPolicy,
     ILogger<KrakenWebSocketClient> logger) : IWebSocketClient
 {
     public async Task RunAsync(ChannelWriter<Tick> writer, CancellationToken ct)
@@ -24,7 +24,7 @@ public class KrakenWebSocketClient(
         {
             try
             {
-                await policies.WrapWebSocketPolicy().ExecuteAsync(async pollyCt =>
+                await webSocketPolicy.WrapWebSocketPolicy().ExecuteAsync(async pollyCt =>
                 {
                     using var ws = new ClientWebSocket();
                     await ConnectAsync(ws, pollyCt);

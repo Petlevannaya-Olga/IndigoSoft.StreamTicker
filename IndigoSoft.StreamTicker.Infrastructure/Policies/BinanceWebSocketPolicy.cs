@@ -3,7 +3,7 @@ using Polly;
 
 namespace IndigoSoft.StreamTicker.Infrastructure.Policies;
 
-public class BinancePolicies(ILogger<BinancePolicies> logger) : BasePolicies(logger)
+public class BinanceWebSocketPolicy(ILogger<BinanceWebSocketPolicy> logger) : BaseWebSocketPolicy(logger)
 {
     protected override string ExchangeName => "Binance";
 

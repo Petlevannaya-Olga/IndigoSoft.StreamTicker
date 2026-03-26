@@ -2,7 +2,7 @@
 
 namespace IndigoSoft.StreamTicker.Infrastructure.Policies;
 
-public class KrakenPolicies(ILogger<KrakenPolicies> logger) : BasePolicies(logger)
+public class KrakenWebSocketPolicy(ILogger<KrakenWebSocketPolicy> logger) : BaseWebSocketPolicy(logger)
 {
     protected override string ExchangeName => "Kraken";
 }

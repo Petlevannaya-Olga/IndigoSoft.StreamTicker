@@ -15,7 +15,7 @@ namespace IndigoSoft.StreamTicker.Infrastructure.WebSocketClients;
 
 public class BinanceWebSocketClient(
     string[] symbols,
-    BinancePolicies policies,
+    BinanceWebSocketPolicy webSocketPolicy,
     ILogger<BinanceWebSocketClient> logger)
     : IWebSocketClient
 {
@@ -25,7 +25,7 @@ public class BinanceWebSocketClient(
         {
             try
             {
-                await policies.WrapWebSocketPolicy().ExecuteAsync(async pollyCt =>
+                await webSocketPolicy.WrapWebSocketPolicy().ExecuteAsync(async pollyCt =>
                 {
                     using var ws = new ClientWebSocket();
                     await ConnectAsync(ws, pollyCt);

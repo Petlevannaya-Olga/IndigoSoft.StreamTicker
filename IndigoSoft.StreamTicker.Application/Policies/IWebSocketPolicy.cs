@@ -2,7 +2,7 @@
 
 namespace IndigoSoft.StreamTicker.Application.Policies;
 
-public interface IPolicies
+public interface IWebSocketPolicy
 {
     /// <summary>
     /// Возвращает политику повторных попыток для обработки временных ошибок.

@@ -4,7 +4,7 @@ using Polly;
 
 namespace IndigoSoft.StreamTicker.Infrastructure.Policies;
 
-public abstract class BasePolicies(ILogger<BasePolicies> logger) : IPolicies
+public abstract class BaseWebSocketPolicy(ILogger<BaseWebSocketPolicy> logger) : IWebSocketPolicy
 {
     protected readonly Random Random = new();
 

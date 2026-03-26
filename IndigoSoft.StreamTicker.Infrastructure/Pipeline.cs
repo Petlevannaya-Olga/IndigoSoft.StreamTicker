@@ -6,11 +6,11 @@ using Microsoft.Extensions.Logging;
 
 namespace IndigoSoft.StreamTicker.Infrastructure;
 
-public class TickProcessor(
+public class Pipeline(
     IEnumerable<IWebSocketClient> clients,
     IDeduplicator<Tick> deduplicator,
     ITickRepository repository,
-    ILogger<TickProcessor> logger)
+    ILogger<Pipeline> logger)
     : BackgroundService
 {
     private readonly Channel<Tick> _channel = Channel.CreateBounded<Tick>(1000);
@@ -43,7 +43,7 @@ public class TickProcessor(
             if (deduplicator.IsDuplicate(tick))
                 continue;
 
-            logger.LogInformation("Tick: {Tick}", tick);
+            // logger.LogInformation("Tick: {Tick}", tick);
             batch.Add(tick);
 
             if (batch.Count < batchSize) continue;
