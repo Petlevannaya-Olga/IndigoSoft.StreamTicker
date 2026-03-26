@@ -15,6 +15,6 @@ public class KrakenWebSocketClient(
 {
     protected override Uri GetUri()
     {
-        throw new NotImplementedException();
+        return new Uri("wss://ws.kraken.com");
     }
 }
