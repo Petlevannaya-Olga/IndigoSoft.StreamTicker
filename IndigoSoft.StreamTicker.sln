@@ -1,0 +1,40 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IndigoSoft.StreamTicker.Application", "IndigoSoft.StreamTicker.Application\IndigoSoft.StreamTicker.Application.csproj", "{C4905912-8FEC-47FC-BB3E-DB92FDA21966}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IndigoSoft.StreamTicker.Domain", "IndigoSoft.StreamTicker.Domain\IndigoSoft.StreamTicker.Domain.csproj", "{BDC0A253-A5EA-4393-AA17-27417B723BD3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IndigoSoft.StreamTicker.Infrastructure", "IndigoSoft.StreamTicker.Infrastructure\IndigoSoft.StreamTicker.Infrastructure.csproj", "{F074E091-5C4F-4E80-8716-A3291EDEF707}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IndigoSoft.StreamTicker.Contracts", "IndigoSoft.StreamTicker.Contracts\IndigoSoft.StreamTicker.Contracts.csproj", "{9B2D8F47-9C63-469B-8E70-137D0E20FD7D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IndigoSoft.StreamTicker.Presentation", "IndigoSoft.StreamTicker.Presentation\IndigoSoft.StreamTicker.Presentation.csproj", "{708362C2-3AE1-41CC-BC94-A65067AD3017}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C4905912-8FEC-47FC-BB3E-DB92FDA21966}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C4905912-8FEC-47FC-BB3E-DB92FDA21966}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C4905912-8FEC-47FC-BB3E-DB92FDA21966}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C4905912-8FEC-47FC-BB3E-DB92FDA21966}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BDC0A253-A5EA-4393-AA17-27417B723BD3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BDC0A253-A5EA-4393-AA17-27417B723BD3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BDC0A253-A5EA-4393-AA17-27417B723BD3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BDC0A253-A5EA-4393-AA17-27417B723BD3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F074E091-5C4F-4E80-8716-A3291EDEF707}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F074E091-5C4F-4E80-8716-A3291EDEF707}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F074E091-5C4F-4E80-8716-A3291EDEF707}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F074E091-5C4F-4E80-8716-A3291EDEF707}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9B2D8F47-9C63-469B-8E70-137D0E20FD7D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9B2D8F47-9C63-469B-8E70-137D0E20FD7D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9B2D8F47-9C63-469B-8E70-137D0E20FD7D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9B2D8F47-9C63-469B-8E70-137D0E20FD7D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{708362C2-3AE1-41CC-BC94-A65067AD3017}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{708362C2-3AE1-41CC-BC94-A65067AD3017}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{708362C2-3AE1-41CC-BC94-A65067AD3017}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{708362C2-3AE1-41CC-BC94-A65067AD3017}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
