@@ -5,17 +5,16 @@ using Microsoft.Extensions.Logging;
 
 namespace IndigoSoft.StreamTicker.Infrastructure.WebSocketClients;
 
-public class BinanceWebSocketClient(
-    IEnumerable<string> symbols,
+public class KrakenWebSocketClient(
     IWebSocketConnector connector,
     IMessageReceiver receiver,
     IMessageProcessor<Tick> processor,
     IWebSocketPolicy policy,
-    ILogger<WebSocketClientBase<BinanceTickDto, Tick>> logger) :
-    WebSocketClientBase<BinanceTickDto, Tick>(connector, receiver, processor, policy, logger)
+    ILogger<WebSocketClientBase<KrakenTickDto, Tick>> logger)
+    : WebSocketClientBase<KrakenTickDto, Tick>(connector, receiver, processor, policy, logger)
 {
     protected override Uri GetUri()
     {
-        return new($"wss://stream.binance.com:9443/stream?streams={string.Join("@trade/", symbols).ToLower()}@trade");
+        throw new NotImplementedException();
     }
 }
