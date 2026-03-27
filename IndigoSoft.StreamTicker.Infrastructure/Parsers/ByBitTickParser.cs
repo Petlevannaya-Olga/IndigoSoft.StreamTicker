@@ -23,7 +23,12 @@ public class ByBitTickParser : IParser<ByBitTickDto>
             // проверяем наличие topic
             if (!root.TryGetProperty("topic", out var topic))
                 return null;
-
+            
+            // ts
+            if (!root.TryGetProperty("ts", out var ts))
+                return null;
+ 
+            var tsValue = long.Parse(ts.ToString());
             var topicStr = topic.GetString();
 
             if (topicStr != null && topicStr.StartsWith("tickers"))
@@ -48,12 +53,13 @@ public class ByBitTickParser : IParser<ByBitTickDto>
                 }
 
                 if (ticker.TryGetProperty("symbol", out var symbolProp) &&
-                    ticker.TryGetProperty("lastPrice", out var priceProp))
+                    ticker.TryGetProperty("lastPrice", out var priceProp) &&
+                    ticker.TryGetProperty("volume24h", out var volumeProp))
                 {
                     var symbol = symbolProp.GetString();
                     var price = double.Parse(priceProp.GetString()!, CultureInfo.InvariantCulture);
-
-                    return [new ByBitTickDto(symbol!, price, 0, 0)];
+                    var volume = double.Parse(volumeProp.GetString()!, CultureInfo.InvariantCulture);
+                    return [new ByBitTickDto(symbol!, price, volume, tsValue)];
                 }
             }
         }

@@ -15,7 +15,7 @@ public class WebSocketPolicy(ILogger<WebSocketPolicy> logger) : IWebSocketPolicy
             .CircuitBreakerAsync(
                 exceptionsAllowedBeforeBreaking: 5,
                 durationOfBreak: TimeSpan.FromSeconds(30),
-                onBreak: (ex, breakDelay) => logger.LogWarning(ex, "Circuit broken for {Delay}s", breakDelay.TotalSeconds),
+                onBreak: (ex, breakDelay) => logger.LogWarning("Circuit broken for {Delay}s", breakDelay.TotalSeconds),
                 onReset: () => logger.LogInformation("Circuit reset"),
                 onHalfOpen: () => logger.LogInformation("Circuit half-open")
             );
@@ -26,7 +26,7 @@ public class WebSocketPolicy(ILogger<WebSocketPolicy> logger) : IWebSocketPolicy
             .WaitAndRetryAsync(
                 3,
                 retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
-                onRetry: (ex, delay) => logger.LogWarning(ex, "Retrying in {Delay}s", delay.TotalSeconds)
+                onRetry: (ex, delay) => logger.LogWarning("Retrying in {Delay}s", delay.TotalSeconds)
             );
 
         // Timeout: не даём выполняться дольше 10 секунд

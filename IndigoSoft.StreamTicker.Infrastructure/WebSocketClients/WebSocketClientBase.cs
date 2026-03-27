@@ -47,7 +47,7 @@ public abstract class WebSocketClientBase<TDto, TDomain>(
             }
             catch (Exception ex)
             {
-                logger.LogWarning(ex, "WebSocket error, reconnecting in 2 seconds...");
+                logger.LogWarning("WebSocket error, reconnecting in 2 seconds...");
                 try
                 {
                     await Task.Delay(TimeSpan.FromSeconds(2), ct);
