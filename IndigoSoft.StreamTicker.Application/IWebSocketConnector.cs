@@ -4,5 +4,5 @@ namespace IndigoSoft.StreamTicker.Application;
 
 public interface IWebSocketConnector
 {
-    Task<ClientWebSocket> ConnectAsync(Uri uri, CancellationToken ct);
+    Task<ClientWebSocket> ConnectAsync(CancellationToken ct);
 }

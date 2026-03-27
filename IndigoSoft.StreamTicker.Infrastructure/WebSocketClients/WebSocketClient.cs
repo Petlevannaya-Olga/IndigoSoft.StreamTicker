@@ -4,12 +4,12 @@ using Microsoft.Extensions.Logging;
 
 namespace IndigoSoft.StreamTicker.Infrastructure.WebSocketClients;
 
-public abstract class WebSocketClientBase<TDto, TDomain>(
+public class WebSocketClient<TDto, TDomain>(
     IWebSocketConnector connector,
     IMessageReceiver receiver,
     IMessageProcessor<TDomain> processor,
     IWebSocketPolicy policy,
-    ILogger<WebSocketClientBase<TDto, TDomain>> logger)
+    ILogger<WebSocketClient<TDto, TDomain>> logger)
     : IWebSocketClient<TDomain> where TDomain : class
 {
     public async Task RunAsync(ITargetBlock<TDomain> target, CancellationToken ct)
@@ -20,7 +20,7 @@ public abstract class WebSocketClientBase<TDto, TDomain>(
             {
                 await policy.ExecuteAsync(async pollyCt =>
                 {
-                    var ws = await connector.ConnectAsync(GetUri(), pollyCt);
+                    var ws = await connector.ConnectAsync(pollyCt);
 
                     await receiver.ReceiveAsync(
                         ws,
@@ -61,6 +61,4 @@ public abstract class WebSocketClientBase<TDto, TDomain>(
 
         logger.LogInformation("{Client} stopped", GetType().Name);
     }
-
-    protected abstract Uri GetUri();
 }

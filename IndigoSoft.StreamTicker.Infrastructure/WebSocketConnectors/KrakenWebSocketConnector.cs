@@ -6,9 +6,9 @@ using Microsoft.Extensions.Logging;
 
 namespace IndigoSoft.StreamTicker.Infrastructure.WebSocketConnectors;
 
-public class KrakenWebSocketConnector(string[] symbols, ILogger<KrakenWebSocketConnector> logger) : IWebSocketConnector
+public class KrakenWebSocketConnector(Uri uri, string[] symbols, ILogger<KrakenWebSocketConnector> logger) : IWebSocketConnector
 {
-    public async Task<ClientWebSocket> ConnectAsync(Uri uri, CancellationToken ct)
+    public async Task<ClientWebSocket> ConnectAsync(CancellationToken ct)
     {
         var ws = new ClientWebSocket();
         await ws.ConnectAsync(uri, ct);

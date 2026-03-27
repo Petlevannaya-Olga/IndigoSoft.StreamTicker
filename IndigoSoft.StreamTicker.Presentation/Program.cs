@@ -2,8 +2,8 @@
 using IndigoSoft.StreamTicker.Application;
 using IndigoSoft.StreamTicker.Domain;
 using IndigoSoft.StreamTicker.Infrastructure;
+using IndigoSoft.StreamTicker.Infrastructure.Options;
 using IndigoSoft.StreamTicker.Infrastructure.Policies;
-using IndigoSoft.StreamTicker.Presentation.Options;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -41,10 +41,10 @@ try
                 .AddParsers()
                 .AddMappers()
                 .AddDb(configuration)
-                .AddWebSocketClients(configuration)
-                .AddWebSocketConnectors();
+                .AddWebSocketConnectors()
+                .AddWebSocketClients(configuration);
 
-            services.Configure<SymbolsOptions>(configuration.GetSection("Symbols"));
+            services.Configure<ExchangeOptions>(configuration.GetSection("Exchanges"));
 
             services.AddSingleton<IMessageReceiver, DefaultMessageReceiver>();
             services.AddSingleton<IDeduplicator<Tick>, SlidingWindowDeduplicator>();
