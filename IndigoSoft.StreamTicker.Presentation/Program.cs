@@ -44,7 +44,7 @@ try
             services.AddSingleton<IWebSocketConnector, DefaultWebSocketConnector>();
             services.AddSingleton<IMessageReceiver, DefaultMessageReceiver>();
 
-            services.AddSingleton<IDeduplicator<Tick>, SlidingWindowDeduplicator<Tick>>();
+            services.AddSingleton<IDeduplicator<Tick>, SlidingWindowDeduplicator>();
             services.AddDbContext<TickDbContext>(opt => opt.UseSqlite("Data Source=ticks.db"));
             services.AddScoped<ITickRepository, TickRepository>();
             services.AddHostedService<DataflowPipeline>();
@@ -63,6 +63,8 @@ try
             services.AddSingleton<IMapper<KrakenTickDto, Tick>, KrakenDtoMapper>();
             services.AddSingleton<IMapper<BinanceTickDto, Tick>, BinanceDtoMapper>();
             services.AddSingleton<IWebSocketPolicy, WebSocketPolicy>();
+            services.AddSingleton<IMetricsService, MetricsService>();
+            services.AddHostedService<MetricsBackgroundService>();
             
             services.AddTransient<IWebSocketClient<Tick>>(sp =>
                 new BinanceWebSocketClient(

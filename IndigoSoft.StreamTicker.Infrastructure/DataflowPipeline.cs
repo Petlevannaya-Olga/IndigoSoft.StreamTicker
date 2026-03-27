@@ -9,6 +9,8 @@ namespace IndigoSoft.StreamTicker.Infrastructure;
 public class DataflowPipeline(
     IEnumerable<IWebSocketClient<Tick>> clients,
     ITickRepository repository,
+    IDeduplicator<Tick> deduplicator,
+    IMetricsService metrics,
     ILogger<DataflowPipeline> logger)
     : BackgroundService
 {
@@ -19,44 +21,63 @@ public class DataflowPipeline(
             BoundedCapacity = 10_000
         });
 
+        var metricsBlock = new TransformBlock<Tick, Tick>(tick =>
+        {
+            metrics.Increment();
+            return tick;
+        },
+        new ExecutionDataflowBlockOptions
+        {
+            MaxDegreeOfParallelism = 1
+        });
+
+        // ✅ Dedup block
+        var dedupBlock = new TransformManyBlock<Tick, Tick>(tick => deduplicator.IsDuplicate(tick) ? [] : [tick],
+        new ExecutionDataflowBlockOptions
+        {
+            MaxDegreeOfParallelism = Environment.ProcessorCount
+        });
+
         var batch = new BatchBlock<Tick>(1000);
 
         var writer = new ActionBlock<Tick[]>(async (Tick[] batchItems) =>
+        {
+            try
             {
-                try
-                {
-                    if (batchItems.Length == 0)
-                        return;
+                if (batchItems.Length == 0)
+                    return;
 
-                    await repository.SaveBatchAsync(batchItems, ct);
-                }
-                catch (Exception ex)
-                {
-                    logger.LogError(ex, "Save batch failed");
-                }
-            },
-            new ExecutionDataflowBlockOptions
+                await repository.SaveBatchAsync(batchItems, ct);
+            }
+            catch (Exception ex)
             {
-                MaxDegreeOfParallelism = 1,
-                BoundedCapacity = 10
-            });
+                logger.LogError(ex, "Save batch failed");
+            }
+        },
+        new ExecutionDataflowBlockOptions
+        {
+            MaxDegreeOfParallelism = 1,
+            BoundedCapacity = 10
+        });
 
-        // связываем блоки
-        source.LinkTo(batch, new DataflowLinkOptions { PropagateCompletion = true });
-        batch.LinkTo(writer, new DataflowLinkOptions { PropagateCompletion = true });
+        // 🔗 связываем pipeline
+        var linkOptions = new DataflowLinkOptions { PropagateCompletion = true };
 
-        // запускаем клиентов
+        source.LinkTo(metricsBlock, linkOptions);
+        metricsBlock.LinkTo(dedupBlock, linkOptions);
+        dedupBlock.LinkTo(batch, linkOptions);
+        batch.LinkTo(writer, linkOptions);
+
+        // 🚀 запускаем клиентов
         var clientTasks = clients
             .Select(c => c.RunAsync(source, ct))
             .ToArray();
 
-        // ждём завершения клиентов
         await Task.WhenAll(clientTasks);
 
-        // корректно завершаем вход
+        // корректное завершение
         source.Complete();
 
-        // ждём завершения всей цепочки
         await writer.Completion;
 
         logger.LogInformation("Pipeline completed");

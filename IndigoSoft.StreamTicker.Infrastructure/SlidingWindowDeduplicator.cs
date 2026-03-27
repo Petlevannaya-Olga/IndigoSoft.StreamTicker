@@ -4,7 +4,7 @@ using IndigoSoft.StreamTicker.Domain;
 
 namespace IndigoSoft.StreamTicker.Infrastructure;
 
-public class SlidingWindowDeduplicator<T>(int windowSize = 5000) : IDeduplicator<Tick>
+public class SlidingWindowDeduplicator(int windowSize = 5000) : IDeduplicator<Tick>
 {
     private readonly ConcurrentQueue<int> _queue = new();
     private readonly ConcurrentDictionary<int, byte> _set = new();
