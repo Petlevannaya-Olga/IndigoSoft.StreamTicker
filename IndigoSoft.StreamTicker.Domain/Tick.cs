@@ -10,7 +10,7 @@ public class Tick
     public long EventTime { get; set; } // TODO Datetime
     
     // EF Core
-    public Tick()
+    private Tick()
     {
     }
 
