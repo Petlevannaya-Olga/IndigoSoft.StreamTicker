@@ -2,5 +2,5 @@
 
 public interface IMessageProcessor<out TDomain> where TDomain : class
 {
-    TDomain? ProcessMessage(string message, CancellationToken ct);
+    IEnumerable<TDomain>? ProcessMessage(string message, CancellationToken ct);
 }

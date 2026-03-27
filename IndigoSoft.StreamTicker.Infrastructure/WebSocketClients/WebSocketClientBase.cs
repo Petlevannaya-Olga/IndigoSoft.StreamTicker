@@ -26,9 +26,15 @@ public abstract class WebSocketClientBase<TDto, TDomain>(
                         ws,
                         async message =>
                         {
-                            var item = processor.ProcessMessage(message, pollyCt);
-                            if (item is not null)
-                                await target.SendAsync(item, pollyCt);
+                            var items = processor.ProcessMessage(message, pollyCt);
+
+                            if (items is not null)
+                            {
+                                foreach (var item in items)
+                                {
+                                    await target.SendAsync(item, pollyCt);
+                                }
+                            }
                         },
                         pollyCt);
 
