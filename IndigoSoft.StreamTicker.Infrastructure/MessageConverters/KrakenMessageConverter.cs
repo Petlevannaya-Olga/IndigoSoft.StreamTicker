@@ -28,7 +28,7 @@ public class KrakenMessageConverter(ILogger<KrakenMessageConverter> logger) : IM
             if (tradesArray.ValueKind != JsonValueKind.Array || string.IsNullOrEmpty(pair))
                 return null;
 
-            var ticks = new List<KrakenTickDto>();
+            var ticks = new List<Tick>();
 
             foreach (var trade in tradesArray.EnumerateArray())
             {
@@ -53,7 +53,7 @@ public class KrakenMessageConverter(ILogger<KrakenMessageConverter> logger) : IM
                         continue;
 
                     var eventTime = (long)eventTimeDouble;
-                    ticks.Add(new KrakenTickDto(pair, price, volume, eventTime));
+                    ticks.Add(new Tick(nameof(AvailableExchanges.Kraken), pair, price, volume, eventTime));
                 }
                 catch (Exception exTrade)
                 {
@@ -61,14 +61,7 @@ public class KrakenMessageConverter(ILogger<KrakenMessageConverter> logger) : IM
                 }
             }
 
-            return ticks.Count > 0
-                ? ticks.Select(tick => new Tick(
-                    nameof(AvailableExchanges.Kraken),
-                    tick.Symbol,
-                    tick.Price,
-                    tick.Volume,
-                    tick.EventTime)).ToList()
-                : null;
+            return ticks.Count > 0 ? ticks : null;
         }
         catch (Exception ex)
         {
