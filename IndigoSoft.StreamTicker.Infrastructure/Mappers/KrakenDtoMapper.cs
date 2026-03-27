@@ -8,6 +8,12 @@ public class KrakenDtoMapper: IMapper<KrakenTickDto, Tick>
 {
     public Tick Map(KrakenTickDto source)
     {
-        throw new NotImplementedException();
+        return new Tick(
+            nameof(AvailableExchanges.Kraken),
+            source.Symbol,
+            source.Price,
+            source.Volume,
+            source.EventTime
+        );
     }
 }
