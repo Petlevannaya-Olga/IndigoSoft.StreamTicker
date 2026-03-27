@@ -41,7 +41,6 @@ public class DefaultMessageReceiver : IMessageReceiver
 
         do
         {
-            // Используем ArraySegment<byte> для совместимости
             result = await ws.ReceiveAsync(new ArraySegment<byte>(buffer), ct);
 
             if (result.MessageType == WebSocketMessageType.Close)

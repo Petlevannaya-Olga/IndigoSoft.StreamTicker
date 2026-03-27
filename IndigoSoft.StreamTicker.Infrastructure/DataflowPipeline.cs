@@ -31,7 +31,6 @@ public class DataflowPipeline(
             MaxDegreeOfParallelism = 1
         });
 
-        // ✅ Dedup block
         var dedupBlock = new TransformManyBlock<Tick, Tick>(tick => deduplicator.IsDuplicate(tick) ? [] : [tick],
         new ExecutionDataflowBlockOptions
         {
@@ -60,7 +59,6 @@ public class DataflowPipeline(
             BoundedCapacity = 10
         });
 
-        // 🔗 связываем pipeline
         var linkOptions = new DataflowLinkOptions { PropagateCompletion = true };
 
         source.LinkTo(metricsBlock, linkOptions);
@@ -68,14 +66,12 @@ public class DataflowPipeline(
         dedupBlock.LinkTo(batch, linkOptions);
         batch.LinkTo(writer, linkOptions);
 
-        // 🚀 запускаем клиентов
         var clientTasks = clients
             .Select(c => c.RunAsync(source, ct))
             .ToArray();
 
         await Task.WhenAll(clientTasks);
 
-        // корректное завершение
         source.Complete();
 
         await writer.Completion;
