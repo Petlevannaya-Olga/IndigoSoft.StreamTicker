@@ -19,9 +19,14 @@ public static class ServiceCollectionExtensions
 
     public static IServiceCollection AddMessageProcessors(this IServiceCollection services)
     {
-        services.AddSingleton<IMessageProcessor<Tick>, SingleMessageProcessor<BinanceTickDto, Tick>>();
-        services.AddSingleton<IMessageProcessor<Tick>, SingleMessageProcessor<ByBitTickDto, Tick>>();
-        services.AddSingleton<IMessageProcessor<Tick>, CollectionMessageProcessor<KrakenTickDto, Tick>>();
+        services.AddSingleton<IMessageProcessor<Tick>, MessageProcessor<KrakenTickDto, Tick>>();
+        services.AddSingleton<MessageProcessor<KrakenTickDto, Tick>>();
+
+        services.AddSingleton<IMessageProcessor<Tick>, MessageProcessor<ByBitTickDto, Tick>>();
+        services.AddSingleton<MessageProcessor<ByBitTickDto, Tick>>();
+        
+        services.AddSingleton<IMessageProcessor<Tick>, MessageProcessor<BinanceTickDto, Tick>>();
+        services.AddSingleton<MessageProcessor<BinanceTickDto, Tick>>();
         return services;
     }
 }

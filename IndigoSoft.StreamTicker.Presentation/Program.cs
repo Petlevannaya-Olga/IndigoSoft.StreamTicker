@@ -55,12 +55,9 @@ try
             services.AddDbContext<TickDbContext>(opt => opt.UseSqlite("Data Source=ticks.db"));
             services.AddScoped<ITickRepository, TickRepository>();
             
-            services.AddSingleton<CollectionMessageProcessor<KrakenTickDto, Tick>>();
-            services.AddSingleton<SingleMessageProcessor<BinanceTickDto, Tick>>();
-            services.AddSingleton<SingleMessageProcessor<ByBitTickDto, Tick>>();
             
             services.AddSingleton<IParser<BinanceTickDto>, BinanceTickParser>();
-            services.AddSingleton<IParser<IEnumerable<KrakenTickDto>>, KrakenTickParser>();
+            services.AddSingleton<IParser<KrakenTickDto>, KrakenTickParser>();
             services.AddSingleton<IParser<ByBitTickDto>, ByBitTickParser>();
             
             services.AddSingleton<IMapper<KrakenTickDto, Tick>, KrakenDtoMapper>();
@@ -87,7 +84,7 @@ try
                     ],
                     sp.GetRequiredService<IWebSocketConnector>(),
                     sp.GetRequiredService<IMessageReceiver>(),
-                    sp.GetRequiredService<SingleMessageProcessor<BinanceTickDto, Tick>>(),
+                    sp.GetRequiredService<MessageProcessor<BinanceTickDto, Tick>>(),
                     sp.GetRequiredService<IWebSocketPolicy>(),
                     sp.GetRequiredService<ILogger<BinanceWebSocketClient>>()
                 ));
@@ -96,7 +93,7 @@ try
                 new KrakenWebSocketClient(
                     sp.GetRequiredService<KrakenWebSocketConnector>(),
                     sp.GetRequiredService<IMessageReceiver>(),
-                    sp.GetRequiredService<CollectionMessageProcessor<KrakenTickDto, Tick>>(),
+                    sp.GetRequiredService<MessageProcessor<KrakenTickDto, Tick>>(),
                     sp.GetRequiredService<IWebSocketPolicy>(),
                     sp.GetRequiredService<ILogger<KrakenWebSocketClient>>()
                 ));
@@ -105,7 +102,7 @@ try
                 new ByBitWebSocketClient(
                     sp.GetRequiredService<ByBitWebSocketConnector>(),
                     sp.GetRequiredService<IMessageReceiver>(),
-                    sp.GetRequiredService<SingleMessageProcessor<ByBitTickDto, Tick>>(),
+                    sp.GetRequiredService<MessageProcessor<ByBitTickDto, Tick>>(),
                     sp.GetRequiredService<IWebSocketPolicy>(),
                     sp.GetRequiredService<ILogger<ByBitWebSocketClient>>()
                 ));

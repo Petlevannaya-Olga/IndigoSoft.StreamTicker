@@ -7,7 +7,7 @@ namespace IndigoSoft.StreamTicker.Infrastructure.Parsers;
 
 public class BinanceTickParser(ILogger<BinanceTickParser> logger) : IParser<BinanceTickDto>
 {
-    public BinanceTickDto? Parse(string json)
+    public List<BinanceTickDto>? Parse(string json)
     {
         if (string.IsNullOrWhiteSpace(json))
         {
@@ -17,7 +17,8 @@ public class BinanceTickParser(ILogger<BinanceTickParser> logger) : IParser<Bina
 
         try
         {
-            return JsonSerializer.Deserialize<BinanceTickDto>(json);
+            var result = JsonSerializer.Deserialize<BinanceTickDto>(json);
+            return result is null ? null : [result];
         }
         catch (JsonException ex)
         {

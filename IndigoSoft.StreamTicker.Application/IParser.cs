@@ -1,6 +1,6 @@
 ﻿namespace IndigoSoft.StreamTicker.Application;
 
-public interface IParser<out T>
+public interface IParser<T>
 {
-    T? Parse(string json);
+    List<T>? Parse(string json);
 }

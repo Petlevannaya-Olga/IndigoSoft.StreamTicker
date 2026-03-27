@@ -7,7 +7,7 @@ namespace IndigoSoft.StreamTicker.Infrastructure.Parsers;
 
 public class ByBitTickParser : IParser<ByBitTickDto>
 {
-    public ByBitTickDto? Parse(string json)
+    public List<ByBitTickDto>? Parse(string json)
     {
         try
         {
@@ -53,7 +53,7 @@ public class ByBitTickParser : IParser<ByBitTickDto>
                     var symbol = symbolProp.GetString();
                     var price = double.Parse(priceProp.GetString()!, CultureInfo.InvariantCulture);
 
-                    return new ByBitTickDto(symbol!, price, 0, 0);
+                    return [new ByBitTickDto(symbol!, price, 0, 0)];
                 }
             }
         }

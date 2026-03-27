@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace IndigoSoft.StreamTicker.Infrastructure.Parsers;
 
-public class KrakenTickParser(ILogger<KrakenTickParser> logger) : IParser<List<KrakenTickDto>>
+public class KrakenTickParser(ILogger<KrakenTickParser> logger) : IParser<KrakenTickDto>
 {
     public List<KrakenTickDto>? Parse(string json)
     {
