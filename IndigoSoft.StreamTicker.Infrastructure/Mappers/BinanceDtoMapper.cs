@@ -9,12 +9,13 @@ public class BinanceDtoMapper : IMapper<BinanceTickDto, Tick>
 {
     public Tick Map(BinanceTickDto source)
     {
-        return new Tick(
-            Guid.NewGuid(),
-            nameof(AvailableExchanges.Binance),
-            source.Data.Symbol,
-            double.Parse(source.Data.Price, CultureInfo.InvariantCulture),
-            double.Parse(source.Data.Volume, CultureInfo.InvariantCulture),
-            source.Data.EventTime);
+        return new Tick
+        {
+            Exchange = nameof(AvailableExchanges.Binance),
+            Symbol = source.Data.Symbol,
+            Price = double.Parse(source.Data.Price, CultureInfo.InvariantCulture),
+            Volume = double.Parse(source.Data.Volume, CultureInfo.InvariantCulture),
+            EventTime = source.Data.EventTime
+        };
     }
 }
