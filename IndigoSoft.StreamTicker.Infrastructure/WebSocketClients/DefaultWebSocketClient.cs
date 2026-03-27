@@ -1,18 +1,19 @@
 ﻿using System.Threading.Tasks.Dataflow;
 using IndigoSoft.StreamTicker.Application;
+using IndigoSoft.StreamTicker.Domain;
 using Microsoft.Extensions.Logging;
 
 namespace IndigoSoft.StreamTicker.Infrastructure.WebSocketClients;
 
-public class WebSocketClient<TDto, TDomain>(
+public class DefaultWebSocketClient(
     IWebSocketConnector connector,
     IMessageReceiver receiver,
-    IMessageProcessor<TDomain> processor,
+    IMessageConverter<Tick> converter,
     IWebSocketPolicy policy,
-    ILogger<WebSocketClient<TDto, TDomain>> logger)
-    : IWebSocketClient<TDomain> where TDomain : class
+    ILogger<DefaultWebSocketClient> logger)
+    : IWebSocketClient<Tick>
 {
-    public async Task RunAsync(ITargetBlock<TDomain> target, CancellationToken ct)
+    public async Task RunAsync(ITargetBlock<Tick> target, CancellationToken ct)
     {
         while (!ct.IsCancellationRequested)
         {
@@ -26,7 +27,7 @@ public class WebSocketClient<TDto, TDomain>(
                         ws,
                         async message =>
                         {
-                            var items = processor.ProcessMessage(message, pollyCt);
+                            var items = converter.Convert(message, pollyCt);
 
                             if (items is not null)
                             {

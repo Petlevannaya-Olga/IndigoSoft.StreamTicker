@@ -2,16 +2,18 @@
 using System.Text.Json;
 using IndigoSoft.StreamTicker.Application;
 using IndigoSoft.StreamTicker.Contracts;
+using IndigoSoft.StreamTicker.Domain;
+using Microsoft.Extensions.Logging;
 
-namespace IndigoSoft.StreamTicker.Infrastructure.Parsers;
+namespace IndigoSoft.StreamTicker.Infrastructure.MessageConverters;
 
-public class ByBitTickParser : IParser<ByBitTickDto>
+public class ByBitMessageConverter(ILogger<ByBitMessageConverter> logger) : IMessageConverter<Tick>
 {
-    public List<ByBitTickDto>? Parse(string json)
+    public List<Tick>? Convert(string message, CancellationToken ct)
     {
         try
         {
-            using var doc = JsonDocument.Parse(json);
+            using var doc = JsonDocument.Parse(message);
             var root = doc.RootElement;
 
             // системные сообщения
@@ -59,7 +61,7 @@ public class ByBitTickParser : IParser<ByBitTickDto>
                     var symbol = symbolProp.GetString();
                     var price = double.Parse(priceProp.GetString()!, CultureInfo.InvariantCulture);
                     var volume = double.Parse(volumeProp.GetString()!, CultureInfo.InvariantCulture);
-                    return [new ByBitTickDto(symbol!, price, volume, tsValue)];
+                    return [new Tick(nameof(AvailableExchanges.ByBit), symbol!, price, volume, tsValue)];
                 }
             }
         }

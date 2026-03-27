@@ -36,10 +36,8 @@ try
         .ConfigureServices(services =>
         {
             services
-                .AddMessageProcessors()
+                .AddMessageConverters()
                 .AddBackgroundServices()
-                .AddParsers()
-                .AddMappers()
                 .AddDb(configuration)
                 .AddWebSocketConnectors()
                 .AddWebSocketClients(configuration);

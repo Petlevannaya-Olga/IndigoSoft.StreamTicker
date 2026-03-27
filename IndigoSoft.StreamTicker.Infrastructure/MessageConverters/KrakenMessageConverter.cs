@@ -1,22 +1,23 @@
 ﻿using System.Text.Json;
 using IndigoSoft.StreamTicker.Application;
 using IndigoSoft.StreamTicker.Contracts;
+using IndigoSoft.StreamTicker.Domain;
 using Microsoft.Extensions.Logging;
 
-namespace IndigoSoft.StreamTicker.Infrastructure.Parsers;
+namespace IndigoSoft.StreamTicker.Infrastructure.MessageConverters;
 
-public class KrakenTickParser(ILogger<KrakenTickParser> logger) : IParser<KrakenTickDto>
+public class KrakenMessageConverter(ILogger<KrakenMessageConverter> logger) : IMessageConverter<Tick>
 {
-    public List<KrakenTickDto>? Parse(string json)
+    public List<Tick>? Convert(string message, CancellationToken ct)
     {
         try
         {
-            if (json.StartsWith('{'))
+            if (message.StartsWith('{'))
             {
                 return null;
             }
 
-            using var doc = JsonDocument.Parse(json);
+            using var doc = JsonDocument.Parse(message);
             var root = doc.RootElement;
 
             if (root.ValueKind != JsonValueKind.Array || root.GetArrayLength() < 4)
@@ -33,21 +34,21 @@ public class KrakenTickParser(ILogger<KrakenTickParser> logger) : IParser<Kraken
             {
                 try
                 {
-                    if (trade.GetArrayLength() < 3) 
+                    if (trade.GetArrayLength() < 3)
                         continue;
 
-                    if (!double.TryParse(trade[0].GetString(), 
-                            System.Globalization.NumberStyles.Any, 
+                    if (!double.TryParse(trade[0].GetString(),
+                            System.Globalization.NumberStyles.Any,
                             System.Globalization.CultureInfo.InvariantCulture, out var price))
                         continue;
 
-                    if (!double.TryParse(trade[1].GetString(), 
-                            System.Globalization.NumberStyles.Any, 
+                    if (!double.TryParse(trade[1].GetString(),
+                            System.Globalization.NumberStyles.Any,
                             System.Globalization.CultureInfo.InvariantCulture, out var volume))
                         continue;
 
-                    if (!double.TryParse(trade[2].GetString(), 
-                            System.Globalization.NumberStyles.Any, 
+                    if (!double.TryParse(trade[2].GetString(),
+                            System.Globalization.NumberStyles.Any,
                             System.Globalization.CultureInfo.InvariantCulture, out var eventTimeDouble))
                         continue;
 
@@ -60,11 +61,18 @@ public class KrakenTickParser(ILogger<KrakenTickParser> logger) : IParser<Kraken
                 }
             }
 
-            return ticks.Count > 0 ? ticks : null;
+            return ticks.Count > 0
+                ? ticks.Select(tick => new Tick(
+                    nameof(AvailableExchanges.Kraken),
+                    tick.Symbol,
+                    tick.Price,
+                    tick.Volume,
+                    tick.EventTime)).ToList()
+                : null;
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Json parse error: {@Message}", json);
+            logger.LogError("Json parse error: {@Message}", message);
             return null;
         }
     }

@@ -1,10 +1,7 @@
 ﻿using IndigoSoft.StreamTicker.Application;
-using IndigoSoft.StreamTicker.Contracts;
 using IndigoSoft.StreamTicker.Domain;
-using IndigoSoft.StreamTicker.Infrastructure.Mappers;
-using IndigoSoft.StreamTicker.Infrastructure.MessageProcessors;
+using IndigoSoft.StreamTicker.Infrastructure.MessageConverters;
 using IndigoSoft.StreamTicker.Infrastructure.Options;
-using IndigoSoft.StreamTicker.Infrastructure.Parsers;
 using IndigoSoft.StreamTicker.Infrastructure.WebSocketClients;
 using IndigoSoft.StreamTicker.Infrastructure.WebSocketConnectors;
 using Microsoft.EntityFrameworkCore;
@@ -26,32 +23,16 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
-    public static IServiceCollection AddMessageProcessors(this IServiceCollection services)
+    public static IServiceCollection AddMessageConverters(this IServiceCollection services)
     {
-        services.AddSingleton<IMessageProcessor<Tick>, MessageProcessor<KrakenTickDto>>();
-        services.AddSingleton<MessageProcessor<KrakenTickDto>>();
-
-        services.AddSingleton<IMessageProcessor<Tick>, MessageProcessor<ByBitTickDto>>();
-        services.AddSingleton<MessageProcessor<ByBitTickDto>>();
-
-        services.AddSingleton<IMessageProcessor<Tick>, MessageProcessor<BinanceTickDto>>();
-        services.AddSingleton<MessageProcessor<BinanceTickDto>>();
-        return services;
-    }
-
-    public static IServiceCollection AddParsers(this IServiceCollection services)
-    {
-        services.AddSingleton<IParser<BinanceTickDto>, BinanceTickParser>();
-        services.AddSingleton<IParser<KrakenTickDto>, KrakenTickParser>();
-        services.AddSingleton<IParser<ByBitTickDto>, ByBitTickParser>();
-        return services;
-    }
-
-    public static IServiceCollection AddMappers(this IServiceCollection services)
-    {
-        services.AddSingleton<IMapper<KrakenTickDto, Tick>, KrakenDtoMapper>();
-        services.AddSingleton<IMapper<BinanceTickDto, Tick>, BinanceDtoMapper>();
-        services.AddSingleton<IMapper<ByBitTickDto, Tick>, ByBitDtoMapper>();
+        services.AddSingleton<IMessageConverter<Tick>, BinanceMessageConverter>();
+        services.AddSingleton<BinanceMessageConverter>();
+        
+        services.AddSingleton<IMessageConverter<Tick>, KrakenMessageConverter>();
+        services.AddSingleton<KrakenMessageConverter>();
+        
+        services.AddSingleton<IMessageConverter<Tick>, ByBitMessageConverter>();
+        services.AddSingleton<ByBitMessageConverter>();
         return services;
     }
 
@@ -98,47 +79,29 @@ public static class ServiceCollectionExtensions
     
     public static IServiceCollection AddWebSocketClients(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddTransient<IWebSocketClient<Tick>>(sp => new WebSocketClient<BinanceTickDto, Tick>(
+        services.AddTransient<IWebSocketClient<Tick>>(sp => new DefaultWebSocketClient(
             sp.GetRequiredService<BinanceWebSocketConnector>(),
             sp.GetRequiredService<IMessageReceiver>(),
-            sp.GetRequiredService<MessageProcessor<BinanceTickDto>>(),
+            sp.GetRequiredService<BinanceMessageConverter>(),
             sp.GetRequiredService<IWebSocketPolicy>(),
-            sp.GetRequiredService<ILogger<WebSocketClient<BinanceTickDto, Tick>>>()
+            sp.GetRequiredService<ILogger<DefaultWebSocketClient>>()
         ));
         
-        services.AddTransient<IWebSocketClient<Tick>>(sp => new WebSocketClient<KrakenTickDto, Tick>(
+        services.AddTransient<IWebSocketClient<Tick>>(sp => new DefaultWebSocketClient(
             sp.GetRequiredService<KrakenWebSocketConnector>(),
             sp.GetRequiredService<IMessageReceiver>(),
-            sp.GetRequiredService<MessageProcessor<KrakenTickDto>>(),
+            sp.GetRequiredService<KrakenMessageConverter>(),
             sp.GetRequiredService<IWebSocketPolicy>(),
-            sp.GetRequiredService<ILogger<WebSocketClient<KrakenTickDto, Tick>>>()
+            sp.GetRequiredService<ILogger<DefaultWebSocketClient>>()
         ));
         
-        services.AddTransient<IWebSocketClient<Tick>>(sp => new WebSocketClient<ByBitTickDto, Tick>(
+        services.AddTransient<IWebSocketClient<Tick>>(sp => new DefaultWebSocketClient(
             sp.GetRequiredService<ByBitWebSocketConnector>(),
             sp.GetRequiredService<IMessageReceiver>(),
-            sp.GetRequiredService<MessageProcessor<ByBitTickDto>>(),
+            sp.GetRequiredService<ByBitMessageConverter>(),
             sp.GetRequiredService<IWebSocketPolicy>(),
-            sp.GetRequiredService<ILogger<WebSocketClient<ByBitTickDto, Tick>>>()
+            sp.GetRequiredService<ILogger<DefaultWebSocketClient>>()
         ));
-
-        // services.AddTransient<IWebSocketClient<Tick>>(sp =>
-        //     new KrakenWebSocketClient(
-        //         sp.GetRequiredService<KrakenWebSocketConnector>(),
-        //         sp.GetRequiredService<IMessageReceiver>(),
-        //         sp.GetRequiredService<MessageProcessor<KrakenTickDto>>(),
-        //         sp.GetRequiredService<IWebSocketPolicy>(),
-        //         sp.GetRequiredService<ILogger<KrakenWebSocketClient>>()
-        //     ));
-        //
-        // services.AddTransient<IWebSocketClient<Tick>>(sp =>
-        //     new ByBitWebSocketClient(
-        //         sp.GetRequiredService<ByBitWebSocketConnector>(),
-        //         sp.GetRequiredService<IMessageReceiver>(),
-        //         sp.GetRequiredService<MessageProcessor<ByBitTickDto>>(),
-        //         sp.GetRequiredService<IWebSocketPolicy>(),
-        //         sp.GetRequiredService<ILogger<ByBitWebSocketClient>>()
-        //     ));
 
         return services;
     }
