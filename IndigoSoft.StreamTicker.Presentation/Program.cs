@@ -1,6 +1,5 @@
 ﻿using System.Globalization;
 using IndigoSoft.StreamTicker.Application;
-using IndigoSoft.StreamTicker.Domain;
 using IndigoSoft.StreamTicker.Infrastructure;
 using IndigoSoft.StreamTicker.Infrastructure.Options;
 using IndigoSoft.StreamTicker.Infrastructure.Policies;
