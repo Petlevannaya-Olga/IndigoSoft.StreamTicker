@@ -45,7 +45,7 @@ try
             services.Configure<ExchangeOptions>(configuration.GetSection("Exchanges"));
 
             services.AddSingleton<IMessageReceiver, DefaultMessageReceiver>();
-            services.AddSingleton<IDeduplicator<Tick>, SlidingWindowDeduplicator>();
+            services.AddSingleton<IDeduplicator, SlidingWindowDeduplicator>();
             services.AddSingleton<IWebSocketPolicy, WebSocketPolicy>();
         })
         .Build();

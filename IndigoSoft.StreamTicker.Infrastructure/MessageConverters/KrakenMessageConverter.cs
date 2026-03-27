@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 
 namespace IndigoSoft.StreamTicker.Infrastructure.MessageConverters;
 
-public class KrakenMessageConverter(ILogger<KrakenMessageConverter> logger) : IMessageConverter<Tick>
+public class KrakenMessageConverter(ILogger<KrakenMessageConverter> logger) : IMessageConverter
 {
     public List<Tick>? Convert(string message, CancellationToken ct)
     {

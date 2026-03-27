@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 
 namespace IndigoSoft.StreamTicker.Infrastructure.MessageConverters;
 
-public class ByBitMessageConverter(ILogger<ByBitMessageConverter> logger) : IMessageConverter<Tick>
+public class ByBitMessageConverter(ILogger<ByBitMessageConverter> logger) : IMessageConverter
 {
     public List<Tick>? Convert(string message, CancellationToken ct)
     {

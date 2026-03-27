@@ -1,6 +1,8 @@
-﻿namespace IndigoSoft.StreamTicker.Application;
+﻿using IndigoSoft.StreamTicker.Domain;
 
-public interface IDeduplicator<in T>
+namespace IndigoSoft.StreamTicker.Application;
+
+public interface IDeduplicator
 {
-    bool IsDuplicate(T item);
+    bool IsDuplicate(Tick item);
 }

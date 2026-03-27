@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 
 namespace IndigoSoft.StreamTicker.Infrastructure.MessageConverters;
 
-public class BinanceMessageConverter(ILogger<BinanceMessageConverter> logger) : IMessageConverter<Tick>
+public class BinanceMessageConverter(ILogger<BinanceMessageConverter> logger) : IMessageConverter
 {
     public List<Tick>? Convert(string message, CancellationToken ct)
     {

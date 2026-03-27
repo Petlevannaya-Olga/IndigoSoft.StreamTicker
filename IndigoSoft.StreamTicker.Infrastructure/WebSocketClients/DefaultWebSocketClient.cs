@@ -8,10 +8,10 @@ namespace IndigoSoft.StreamTicker.Infrastructure.WebSocketClients;
 public class DefaultWebSocketClient(
     IWebSocketConnector connector,
     IMessageReceiver receiver,
-    IMessageConverter<Tick> converter,
+    IMessageConverter converter,
     IWebSocketPolicy policy,
     ILogger<DefaultWebSocketClient> logger)
-    : IWebSocketClient<Tick>
+    : IWebSocketClient
 {
     public async Task RunAsync(ITargetBlock<Tick> target, CancellationToken ct)
     {

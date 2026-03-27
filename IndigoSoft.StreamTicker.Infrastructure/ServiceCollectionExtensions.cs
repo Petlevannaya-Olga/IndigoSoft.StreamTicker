@@ -25,13 +25,13 @@ public static class ServiceCollectionExtensions
 
     public static IServiceCollection AddMessageConverters(this IServiceCollection services)
     {
-        services.AddSingleton<IMessageConverter<Tick>, BinanceMessageConverter>();
+        services.AddSingleton<IMessageConverter, BinanceMessageConverter>();
         services.AddSingleton<BinanceMessageConverter>();
         
-        services.AddSingleton<IMessageConverter<Tick>, KrakenMessageConverter>();
+        services.AddSingleton<IMessageConverter, KrakenMessageConverter>();
         services.AddSingleton<KrakenMessageConverter>();
         
-        services.AddSingleton<IMessageConverter<Tick>, ByBitMessageConverter>();
+        services.AddSingleton<IMessageConverter, ByBitMessageConverter>();
         services.AddSingleton<ByBitMessageConverter>();
         return services;
     }
@@ -79,30 +79,23 @@ public static class ServiceCollectionExtensions
     
     public static IServiceCollection AddWebSocketClients(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddTransient<IWebSocketClient<Tick>>(sp => new DefaultWebSocketClient(
-            sp.GetRequiredService<BinanceWebSocketConnector>(),
-            sp.GetRequiredService<IMessageReceiver>(),
-            sp.GetRequiredService<BinanceMessageConverter>(),
-            sp.GetRequiredService<IWebSocketPolicy>(),
-            sp.GetRequiredService<ILogger<DefaultWebSocketClient>>()
-        ));
-        
-        services.AddTransient<IWebSocketClient<Tick>>(sp => new DefaultWebSocketClient(
-            sp.GetRequiredService<KrakenWebSocketConnector>(),
-            sp.GetRequiredService<IMessageReceiver>(),
-            sp.GetRequiredService<KrakenMessageConverter>(),
-            sp.GetRequiredService<IWebSocketPolicy>(),
-            sp.GetRequiredService<ILogger<DefaultWebSocketClient>>()
-        ));
-        
-        services.AddTransient<IWebSocketClient<Tick>>(sp => new DefaultWebSocketClient(
-            sp.GetRequiredService<ByBitWebSocketConnector>(),
-            sp.GetRequiredService<IMessageReceiver>(),
-            sp.GetRequiredService<ByBitMessageConverter>(),
-            sp.GetRequiredService<IWebSocketPolicy>(),
-            sp.GetRequiredService<ILogger<DefaultWebSocketClient>>()
-        ));
+        services.AddTransient<IWebSocketClient>(CreateClient<BinanceWebSocketConnector, BinanceMessageConverter>);
+        services.AddTransient<IWebSocketClient>(CreateClient<KrakenWebSocketConnector, KrakenMessageConverter>);
+        services.AddTransient<IWebSocketClient>(CreateClient<ByBitWebSocketConnector, ByBitMessageConverter>);
 
         return services;
+    }
+    
+    private static DefaultWebSocketClient CreateClient<TConnector, TConverter>(IServiceProvider sp)
+        where TConnector : IWebSocketConnector
+        where TConverter : IMessageConverter
+    {
+        return new DefaultWebSocketClient(
+            sp.GetRequiredService<TConnector>(),
+            sp.GetRequiredService<IMessageReceiver>(),
+            sp.GetRequiredService<TConverter>(),
+            sp.GetRequiredService<IWebSocketPolicy>(),
+            sp.GetRequiredService<ILogger<DefaultWebSocketClient>>()
+        );
     }
 }

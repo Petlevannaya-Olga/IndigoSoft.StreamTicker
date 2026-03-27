@@ -1,6 +1,8 @@
-﻿namespace IndigoSoft.StreamTicker.Application;
+﻿using IndigoSoft.StreamTicker.Domain;
 
-public interface IMessageConverter<T>
+namespace IndigoSoft.StreamTicker.Application;
+
+public interface IMessageConverter
 {
-    List<T>? Convert(string message, CancellationToken ct);
+    List<Tick>? Convert(string message, CancellationToken ct);
 }

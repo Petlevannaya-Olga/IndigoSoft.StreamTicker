@@ -7,9 +7,9 @@ using Microsoft.Extensions.Logging;
 namespace IndigoSoft.StreamTicker.Infrastructure;
 
 public class DataflowPipelineBackgroundService(
-    IEnumerable<IWebSocketClient<Tick>> clients,
+    IEnumerable<IWebSocketClient> clients,
     ITickRepository repository,
-    IDeduplicator<Tick> deduplicator,
+    IDeduplicator deduplicator,
     IMetricsService metrics,
     ILogger<DataflowPipelineBackgroundService> logger)
     : BackgroundService
