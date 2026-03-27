@@ -1,11 +1,12 @@
 ﻿using IndigoSoft.StreamTicker.Application;
+using IndigoSoft.StreamTicker.Domain;
 
 namespace IndigoSoft.StreamTicker.Infrastructure.MessageProcessors;
 
-public class MessageProcessor<TDto, TDomain>(IParser<TDto> parser, IMapper<TDto, TDomain> mapper)
-    : IMessageProcessor<TDomain>
+public class MessageProcessor<TDto>(IParser<TDto> parser, IMapper<TDto, Tick> mapper)
+    : IMessageProcessor<Tick>
 {
-    public IEnumerable<TDomain>? ProcessMessage(string message, CancellationToken ct)
+    public IEnumerable<Tick>? ProcessMessage(string message, CancellationToken ct)
     {
         var dto = parser.Parse(message);
         return dto?.Select(mapper.Map);

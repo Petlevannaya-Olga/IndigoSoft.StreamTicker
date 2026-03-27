@@ -84,7 +84,7 @@ try
                     ],
                     sp.GetRequiredService<IWebSocketConnector>(),
                     sp.GetRequiredService<IMessageReceiver>(),
-                    sp.GetRequiredService<MessageProcessor<BinanceTickDto, Tick>>(),
+                    sp.GetRequiredService<MessageProcessor<BinanceTickDto>>(),
                     sp.GetRequiredService<IWebSocketPolicy>(),
                     sp.GetRequiredService<ILogger<BinanceWebSocketClient>>()
                 ));
@@ -93,7 +93,7 @@ try
                 new KrakenWebSocketClient(
                     sp.GetRequiredService<KrakenWebSocketConnector>(),
                     sp.GetRequiredService<IMessageReceiver>(),
-                    sp.GetRequiredService<MessageProcessor<KrakenTickDto, Tick>>(),
+                    sp.GetRequiredService<MessageProcessor<KrakenTickDto>>(),
                     sp.GetRequiredService<IWebSocketPolicy>(),
                     sp.GetRequiredService<ILogger<KrakenWebSocketClient>>()
                 ));
@@ -102,7 +102,7 @@ try
                 new ByBitWebSocketClient(
                     sp.GetRequiredService<ByBitWebSocketConnector>(),
                     sp.GetRequiredService<IMessageReceiver>(),
-                    sp.GetRequiredService<MessageProcessor<ByBitTickDto, Tick>>(),
+                    sp.GetRequiredService<MessageProcessor<ByBitTickDto>>(),
                     sp.GetRequiredService<IWebSocketPolicy>(),
                     sp.GetRequiredService<ILogger<ByBitWebSocketClient>>()
                 ));
