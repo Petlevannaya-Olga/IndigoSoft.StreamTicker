@@ -47,11 +47,11 @@ public class DataflowPipelineBackgroundService(
                 if (batchItems.Length == 0)
                     return;
 
-                await repository.SaveBatchAsync(batchItems, ct);
+                await repository.SaveBatchAsync(batchItems, CancellationToken.None); // игнорировать отмену во время записи
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Save batch failed");
+                logger.LogError("Save batch failed");
             }
         },
         new ExecutionDataflowBlockOptions

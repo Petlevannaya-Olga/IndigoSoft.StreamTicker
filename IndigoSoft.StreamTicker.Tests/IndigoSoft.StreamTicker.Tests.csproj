@@ -8,7 +8,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="BenchmarkDotNet" Version="0.15.8" />
         <PackageReference Include="coverlet.collector" Version="6.0.4" />
         <PackageReference Include="FsCheck" Version="3.3.2" />
         <PackageReference Include="FsCheck.Xunit" Version="3.3.2" />
