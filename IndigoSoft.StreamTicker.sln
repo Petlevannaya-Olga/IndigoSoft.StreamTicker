@@ -10,6 +10,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IndigoSoft.StreamTicker.Con
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IndigoSoft.StreamTicker.Presentation", "IndigoSoft.StreamTicker.Presentation\IndigoSoft.StreamTicker.Presentation.csproj", "{708362C2-3AE1-41CC-BC94-A65067AD3017}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IndigoSoft.StreamTicker.Tests", "IndigoSoft.StreamTicker.Tests\IndigoSoft.StreamTicker.Tests.csproj", "{9F3230C3-CCD2-4C49-B410-A9D71F414DD8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -36,5 +38,9 @@ Global
 		{708362C2-3AE1-41CC-BC94-A65067AD3017}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{708362C2-3AE1-41CC-BC94-A65067AD3017}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{708362C2-3AE1-41CC-BC94-A65067AD3017}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9F3230C3-CCD2-4C49-B410-A9D71F414DD8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9F3230C3-CCD2-4C49-B410-A9D71F414DD8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9F3230C3-CCD2-4C49-B410-A9D71F414DD8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9F3230C3-CCD2-4C49-B410-A9D71F414DD8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
