@@ -40,7 +40,6 @@ try
         })
         .ConfigureServices(services =>
         {
-           // services.AddTransient<IWebSocketClient<Tick>, KrakenWebSocketClient>();
             services.AddSingleton<IWebSocketConnector, DefaultWebSocketConnector>();
             services.AddSingleton<IMessageReceiver, DefaultMessageReceiver>();
 
@@ -76,7 +75,16 @@ try
                     sp.GetRequiredService<IMessageReceiver>(),
                     sp.GetRequiredService<IMessageProcessor<Tick>>(),
                     sp.GetRequiredService<IWebSocketPolicy>(),
-                    sp.GetRequiredService<ILogger<WebSocketClientBase<BinanceTickDto, Tick>>>()
+                    sp.GetRequiredService<ILogger<BinanceWebSocketClient>>()
+                ));
+            
+            services.AddTransient<IWebSocketClient<Tick>>(sp =>
+                new KrakenWebSocketClient(
+                    sp.GetRequiredService<IWebSocketConnector>(),
+                    sp.GetRequiredService<IMessageReceiver>(),
+                    sp.GetRequiredService<IMessageProcessor<Tick>>(),
+                    sp.GetRequiredService<IWebSocketPolicy>(),
+                    sp.GetRequiredService<ILogger<KrakenWebSocketClient>>()
                 ));
         })
         .Build();

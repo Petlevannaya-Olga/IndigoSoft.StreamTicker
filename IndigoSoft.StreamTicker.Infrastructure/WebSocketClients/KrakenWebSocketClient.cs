@@ -10,7 +10,7 @@ public class KrakenWebSocketClient(
     IMessageReceiver receiver,
     IMessageProcessor<Tick> processor,
     IWebSocketPolicy policy,
-    ILogger<WebSocketClientBase<KrakenTickDto, Tick>> logger)
+    ILogger<KrakenWebSocketClient> logger)
     : WebSocketClientBase<KrakenTickDto, Tick>(connector, receiver, processor, policy, logger)
 {
     protected override Uri GetUri()

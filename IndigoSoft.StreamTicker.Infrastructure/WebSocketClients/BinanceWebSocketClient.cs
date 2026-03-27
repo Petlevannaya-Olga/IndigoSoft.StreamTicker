@@ -11,11 +11,11 @@ public class BinanceWebSocketClient(
     IMessageReceiver receiver,
     IMessageProcessor<Tick> processor,
     IWebSocketPolicy policy,
-    ILogger<WebSocketClientBase<BinanceTickDto, Tick>> logger) :
+    ILogger<BinanceWebSocketClient> logger) :
     WebSocketClientBase<BinanceTickDto, Tick>(connector, receiver, processor, policy, logger)
 {
     protected override Uri GetUri()
     {
-        return new($"wss://stream.binance.com:9443/stream?streams={string.Join("@trade/", symbols).ToLower()}@trade");
+        return new Uri($"wss://stream.binance.com:9443/stream?streams={string.Join("@trade/", symbols).ToLower()}@trade");
     }
 }
