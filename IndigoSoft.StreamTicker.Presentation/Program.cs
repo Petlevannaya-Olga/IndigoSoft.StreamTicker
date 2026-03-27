@@ -9,6 +9,7 @@ using IndigoSoft.StreamTicker.Infrastructure.Parsers;
 using IndigoSoft.StreamTicker.Infrastructure.Policies;
 using IndigoSoft.StreamTicker.Infrastructure.WebSocketClients;
 using IndigoSoft.StreamTicker.Infrastructure.WebSocketConnectors;
+using IndigoSoft.StreamTicker.Presentation.Options;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -42,22 +43,22 @@ try
         })
         .ConfigureServices(services =>
         {
+            services
+                .AddMessageProcessors()
+                .AddBackgroundServices();
+                
+                
             services.AddSingleton<IWebSocketConnector, DefaultWebSocketConnector>();
             services.AddSingleton<IMessageReceiver, DefaultMessageReceiver>();
-
+            
             services.AddSingleton<IDeduplicator<Tick>, SlidingWindowDeduplicator>();
             services.AddDbContext<TickDbContext>(opt => opt.UseSqlite("Data Source=ticks.db"));
             services.AddScoped<ITickRepository, TickRepository>();
-            services.AddHostedService<DataflowPipeline>();
-
-            services.AddSingleton<IMessageProcessor<Tick>, SingleMessageProcessor<BinanceTickDto, Tick>>();
-            services.AddSingleton<IMessageProcessor<Tick>, SingleMessageProcessor<ByBitTickDto, Tick>>();
-            services.AddSingleton<IMessageProcessor<Tick>, CollectionMessageProcessor<KrakenTickDto, Tick>>();
             
-            services.AddTransient<CollectionMessageProcessor<KrakenTickDto, Tick>>();
-            services.AddTransient<SingleMessageProcessor<BinanceTickDto, Tick>>();
-            services.AddTransient<SingleMessageProcessor<ByBitTickDto, Tick>>();
-
+            services.AddSingleton<CollectionMessageProcessor<KrakenTickDto, Tick>>();
+            services.AddSingleton<SingleMessageProcessor<BinanceTickDto, Tick>>();
+            services.AddSingleton<SingleMessageProcessor<ByBitTickDto, Tick>>();
+            
             services.AddSingleton<IParser<BinanceTickDto>, BinanceTickParser>();
             services.AddSingleton<IParser<IEnumerable<KrakenTickDto>>, KrakenTickParser>();
             services.AddSingleton<IParser<ByBitTickDto>, ByBitTickParser>();
@@ -66,20 +67,18 @@ try
             services.AddSingleton<IMapper<BinanceTickDto, Tick>, BinanceDtoMapper>();
             services.AddSingleton<IMapper<ByBitTickDto, Tick>, ByBitDtoMapper>();
             services.AddSingleton<IWebSocketPolicy, WebSocketPolicy>();
-            services.AddSingleton<IMetricsService, MetricsService>();
-            services.AddHostedService<MetricsBackgroundService>();
-
+            
             services.AddSingleton<KrakenWebSocketConnector>(sp =>
                 new KrakenWebSocketConnector(["XBT/USD", "ETH/USD", "SOL/USD", "BTC/USDT", "ETH/USDT"],
                     sp.GetRequiredService<ILogger<KrakenWebSocketConnector>>()));
-
+            
             services.AddSingleton<ByBitWebSocketConnector>(sp =>
                 new ByBitWebSocketConnector([
                         "BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "ADAUSDT",
                         "DOGEUSDT", "AVAXUSDT", "DOTUSDT", "MATICUSDT", "LTCUSDT"
                     ],
                     sp.GetRequiredService<ILogger<ByBitWebSocketConnector>>()));
-
+            
             services.AddTransient<IWebSocketClient<Tick>>(sp =>
                 new BinanceWebSocketClient(
                     [
@@ -92,7 +91,7 @@ try
                     sp.GetRequiredService<IWebSocketPolicy>(),
                     sp.GetRequiredService<ILogger<BinanceWebSocketClient>>()
                 ));
-
+            
             services.AddTransient<IWebSocketClient<Tick>>(sp =>
                 new KrakenWebSocketClient(
                     sp.GetRequiredService<KrakenWebSocketConnector>(),
@@ -110,6 +109,23 @@ try
                     sp.GetRequiredService<IWebSocketPolicy>(),
                     sp.GetRequiredService<ILogger<ByBitWebSocketClient>>()
                 ));
+            
+            // services
+            //     .AddWebSockets()
+            //     .AddProcessors()
+            //     .AddParsersAndMappers()
+            //     .AddData()
+            //     .AddBackground();
+            //
+            // services.Configure<KrakenOptions>(configuration.GetSection("Kraken"));
+            //
+            // services.AddTransient<BinanceWebSocketClient>();
+            // services.AddTransient<KrakenWebSocketClient>();
+            // services.AddTransient<ByBitWebSocketClient>();
+            //
+            // services.AddTransient<IWebSocketClient<Tick>, BinanceWebSocketClient>();
+            // services.AddTransient<IWebSocketClient<Tick>, KrakenWebSocketClient>();
+            // services.AddTransient<IWebSocketClient<Tick>, ByBitWebSocketClient>();
         })
         .Build();
 
