@@ -2,7 +2,7 @@
 using IndigoSoft.StreamTicker.Application;
 using Microsoft.Extensions.Logging;
 
-namespace IndigoSoft.StreamTicker.Infrastructure.WebSocketClients;
+namespace IndigoSoft.StreamTicker.Infrastructure.WebSocketConnectors;
 
 public class DefaultWebSocketConnector(ILogger<DefaultWebSocketConnector> logger) : IWebSocketConnector
 {

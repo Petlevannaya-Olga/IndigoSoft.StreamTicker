@@ -1,13 +1,13 @@
 ﻿using IndigoSoft.StreamTicker.Application;
 
-namespace IndigoSoft.StreamTicker.Infrastructure.WebSocketClients;
+namespace IndigoSoft.StreamTicker.Infrastructure.MessageProcessors;
 
-public class CollectionMessageProcessor<TDto, TDomain>(IParser<IEnumerable<TDto>> parser, IMapper<TDto, TDomain> mapper)
+public class SingleMessageProcessor<TDto, TDomain>(IParser<TDto> parser, IMapper<TDto, TDomain> mapper)
     : IMessageProcessor<TDomain> where TDomain : class
 {
     public IEnumerable<TDomain>? ProcessMessage(string message, CancellationToken ct)
     {
         var dto = parser.Parse(message);
-        return dto?.Select(mapper.Map);
+        return dto is null ? null : new[] { mapper.Map(dto) };
     }
 }

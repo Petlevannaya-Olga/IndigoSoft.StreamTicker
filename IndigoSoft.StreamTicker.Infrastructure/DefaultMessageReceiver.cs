@@ -3,7 +3,7 @@ using System.Net.WebSockets;
 using System.Text;
 using IndigoSoft.StreamTicker.Application;
 
-namespace IndigoSoft.StreamTicker.Infrastructure.WebSocketClients;
+namespace IndigoSoft.StreamTicker.Infrastructure;
 
 public class DefaultMessageReceiver : IMessageReceiver
 {

@@ -24,6 +24,7 @@ public class DataflowPipeline(
         var metricsBlock = new TransformBlock<Tick, Tick>(tick =>
         {
             metrics.Increment();
+            // logger.LogInformation("Exchange = {Exchange}, Symbol = {Symbol}, Price = {Price}", tick.Exchange, tick.Symbol, tick.Price);
             return tick;
         },
         new ExecutionDataflowBlockOptions

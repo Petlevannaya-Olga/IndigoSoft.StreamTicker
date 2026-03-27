@@ -4,7 +4,7 @@ using System.Text.Json;
 using IndigoSoft.StreamTicker.Application;
 using Microsoft.Extensions.Logging;
 
-namespace IndigoSoft.StreamTicker.Infrastructure.WebSocketClients;
+namespace IndigoSoft.StreamTicker.Infrastructure.WebSocketConnectors;
 
 public class KrakenWebSocketConnector(string[] symbols, ILogger<KrakenWebSocketConnector> logger) : IWebSocketConnector
 {
