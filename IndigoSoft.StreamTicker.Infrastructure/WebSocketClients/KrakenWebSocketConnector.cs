@@ -13,6 +13,7 @@ public class KrakenWebSocketConnector(string[] symbols, ILogger<KrakenWebSocketC
         var ws = new ClientWebSocket();
         await ws.ConnectAsync(uri, ct);
         logger.LogInformation("Connected to {Uri}", uri);
+        await SubscribeAsync(ws, ct);
         return ws;
     }
 

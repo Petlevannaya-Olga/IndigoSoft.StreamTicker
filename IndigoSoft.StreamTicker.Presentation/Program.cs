@@ -48,14 +48,8 @@ try
             services.AddScoped<ITickRepository, TickRepository>();
             services.AddHostedService<DataflowPipeline>();
 
-            services.AddTransient<
-                IMessageProcessor<Tick>,
-                DefaultMessageProcessor<KrakenTickDto, Tick>>();
-
-            services.AddTransient<
-                IMessageProcessor<Tick>,
-                DefaultMessageProcessor<BinanceTickDto, Tick>>();
-
+            services.AddSingleton<IMessageProcessor<Tick>, DefaultMessageProcessor<BinanceTickDto, Tick>>();
+            
             services.AddSingleton<IParser<BinanceTickDto>, BinanceTickParser>();
             services.AddSingleton<IParser<List<KrakenTickDto>>, KrakenTickParser>();
 
@@ -64,7 +58,11 @@ try
             services.AddSingleton<IWebSocketPolicy, WebSocketPolicy>();
             services.AddSingleton<IMetricsService, MetricsService>();
             services.AddHostedService<MetricsBackgroundService>();
-            
+
+            services.AddSingleton<KrakenWebSocketConnector>(sp =>
+                new KrakenWebSocketConnector(["XBT/USD", "ETH/USD", "SOL/USD", "BTC/USDT", "ETH/USDT"],
+                    sp.GetRequiredService<ILogger<KrakenWebSocketConnector>>()));
+
             services.AddTransient<IWebSocketClient<Tick>>(sp =>
                 new BinanceWebSocketClient(
                     [
@@ -77,15 +75,16 @@ try
                     sp.GetRequiredService<IWebSocketPolicy>(),
                     sp.GetRequiredService<ILogger<BinanceWebSocketClient>>()
                 ));
-            
-            services.AddTransient<IWebSocketClient<Tick>>(sp =>
+
+           /* services.AddTransient<IWebSocketClient<Tick>>(sp =>
                 new KrakenWebSocketClient(
-                    sp.GetRequiredService<IWebSocketConnector>(),
+                    sp.GetRequiredService<KrakenWebSocketConnector>(),
                     sp.GetRequiredService<IMessageReceiver>(),
-                    sp.GetRequiredService<IMessageProcessor<Tick>>(),
+                    sp.GetRequiredService<KrakenMessageProcessor>(),
                     sp.GetRequiredService<IWebSocketPolicy>(),
                     sp.GetRequiredService<ILogger<KrakenWebSocketClient>>()
-                ));
+                ));*/
+            
         })
         .Build();
 

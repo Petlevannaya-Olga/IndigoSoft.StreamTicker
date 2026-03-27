@@ -1,6 +1,6 @@
 ﻿namespace IndigoSoft.StreamTicker.Application;
 
-public interface IMessageProcessor<TDomain> where TDomain : class
+public interface IMessageProcessor<out TDomain> where TDomain : class
 {
-    Task<TDomain?> ProcessMessageAsync(string message, CancellationToken ct);
+    TDomain? ProcessMessage(string message, CancellationToken ct);
 }

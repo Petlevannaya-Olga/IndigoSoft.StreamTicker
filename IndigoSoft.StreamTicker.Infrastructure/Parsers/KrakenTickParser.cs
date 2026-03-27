@@ -11,6 +11,11 @@ public class KrakenTickParser(ILogger<KrakenTickParser> logger) : IParser<List<K
     {
         try
         {
+            if (json.StartsWith('{'))
+            {
+                return null;
+            }
+
             using var doc = JsonDocument.Parse(json);
             var root = doc.RootElement;
 

@@ -26,14 +26,13 @@ public abstract class WebSocketClientBase<TDto, TDomain>(
                         ws,
                         async message =>
                         {
-                            var item = await processor.ProcessMessageAsync(message, pollyCt);
+                            var item = processor.ProcessMessage(message, pollyCt);
                             if (item is not null)
                                 await target.SendAsync(item, pollyCt);
                         },
                         pollyCt);
 
                     throw new Exception("WebSocket disconnected unexpectedly");
-
                 }, ct);
             }
             catch (OperationCanceledException) when (ct.IsCancellationRequested)
@@ -43,7 +42,10 @@ public abstract class WebSocketClientBase<TDto, TDomain>(
             catch (Exception ex)
             {
                 logger.LogWarning(ex, "WebSocket error, reconnecting in 2 seconds...");
-                try { await Task.Delay(TimeSpan.FromSeconds(2), ct); }
+                try
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(2), ct);
+                }
                 catch
                 {
                     // ignored
