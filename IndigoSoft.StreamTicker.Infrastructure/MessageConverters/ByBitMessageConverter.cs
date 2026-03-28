@@ -67,7 +67,7 @@ public class ByBitMessageConverter(ILogger<ByBitMessageConverter> logger) : IMes
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Bybit parse error: {ex.Message}");
+            logger.LogError("Bybit parse error: {Message}", ex.Message);
         }
 
         return null;

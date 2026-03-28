@@ -33,19 +33,19 @@ public class BinanceMessageConverter(ILogger<BinanceMessageConverter> logger) : 
         }
         catch (JsonException ex)
         {
-            logger.LogWarning(ex, "Failed to deserialize JSON: {Message}", message);
+            logger.LogWarning("Failed to deserialize JSON: {Message}", message);
         }
         catch (FormatException ex)
         {
-            logger.LogWarning(ex, "Invalid number/date format in JSON: {Message}", message);
+            logger.LogWarning("Invalid number/date format in JSON: {Message}", message);
         }
         catch (OverflowException ex)
         {
-            logger.LogWarning(ex, "Numeric value in JSON is too large: {Message}", message);
+            logger.LogWarning("Numeric value in JSON is too large: {Message}", message);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Unexpected error while parsing JSON: {Message}", message);
+            logger.LogError("Unexpected error while parsing JSON: {Message}", message);
         }
 
         return null;
