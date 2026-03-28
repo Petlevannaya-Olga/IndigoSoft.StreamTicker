@@ -1,24 +1,44 @@
 ﻿using IndigoSoft.StreamTicker.Application;
+using IndigoSoft.StreamTicker.Contracts;
 
 namespace IndigoSoft.StreamTicker.Infrastructure;
 
 public class MetricsService : IMetricsService
 {
-    private int _counter;
+    private int _in;
+    private int _out;
+    private int _deduplicated;
+    private int _dropped;
+    private int _batch;
 
-    /// <summary>
-    /// Увеличивает счётчик тиксов (TPS)
-    /// </summary>
-    public void Increment()
+    public void IncrementIn()
     {
-        Interlocked.Increment(ref _counter);
+        Interlocked.Increment(ref _in);
     }
 
-    /// <summary>
-    /// Возвращает текущее значение и обнуляет счётчик
-    /// </summary>
-    public int GetAndReset()
+    public void IncrementOut()
     {
-        return Interlocked.Exchange(ref _counter, 0);
+        Interlocked.Increment(ref _out);
+    }
+
+    public void IncrementDeduplicated()
+    {
+        Interlocked.Increment(ref _deduplicated);
+    }
+
+    public void IncrementBatch()
+    {
+        Interlocked.Increment(ref _batch);
+    }
+
+    public MetricsSnapshot GetAndReset()
+    {
+        return new MetricsSnapshot
+        {
+            In = Interlocked.Exchange(ref _in, 0),
+            Out = Interlocked.Exchange(ref _out, 0),
+            Deduplicated = Interlocked.Exchange(ref _deduplicated, 0),
+            BatchCount = Interlocked.Exchange(ref _batch, 0)
+        };
     }
 }

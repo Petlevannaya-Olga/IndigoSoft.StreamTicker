@@ -17,7 +17,12 @@ public class MetricsBackgroundService(
             {
                 var tps = metrics.GetAndReset();
 
-                logger.LogInformation("TPS: {Tps}", tps);
+                logger.LogInformation(
+                    "IN: {TpsIn}, OUT: {TpsOut}, BatchCount: {BatchCount}, Deduplicated: {DeduplicatedCount}",
+                    tps.In,
+                    tps.Out,
+                    tps.BatchCount,
+                    tps.Deduplicated);
 
                 await Task.Delay(1000, ct);
             }
@@ -27,7 +32,7 @@ public class MetricsBackgroundService(
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Metrics error");
+                logger.LogError("Metrics error");
             }
         }
     }

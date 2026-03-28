@@ -1,7 +1,13 @@
-﻿namespace IndigoSoft.StreamTicker.Application;
+﻿using IndigoSoft.StreamTicker.Contracts;
+
+namespace IndigoSoft.StreamTicker.Application;
 
 public interface IMetricsService
 {
-    void Increment();
-    int GetAndReset();
+    void IncrementIn();
+    void IncrementOut();
+    void IncrementDeduplicated();
+    void IncrementBatch();
+
+    MetricsSnapshot GetAndReset();
 }
