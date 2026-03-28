@@ -22,43 +22,44 @@ public class DataflowPipelineBackgroundService(
         });
 
         var metricsBlock = new TransformBlock<Tick, Tick>(tick =>
-        {
-            metrics.Increment();
-            // logger.LogInformation("Exchange = {Exchange}, Symbol = {Symbol}, Price = {Price}", tick.Exchange, tick.Symbol, tick.Price);
-            return tick;
-        },
-        new ExecutionDataflowBlockOptions
-        {
-            MaxDegreeOfParallelism = 1
-        });
+            {
+                metrics.Increment();
+                // logger.LogInformation("Exchange = {Exchange}, Symbol = {Symbol}, Price = {Price}", tick.Exchange, tick.Symbol, tick.Price);
+                return tick;
+            },
+            new ExecutionDataflowBlockOptions
+            {
+                MaxDegreeOfParallelism = 1
+            });
 
         var dedupBlock = new TransformManyBlock<Tick, Tick>(tick => deduplicator.IsDuplicate(tick) ? [] : [tick],
-        new ExecutionDataflowBlockOptions
-        {
-            MaxDegreeOfParallelism = Environment.ProcessorCount
-        });
+            new ExecutionDataflowBlockOptions
+            {
+                MaxDegreeOfParallelism = Environment.ProcessorCount
+            });
 
         var batch = new BatchBlock<Tick>(1000);
 
         var writer = new ActionBlock<Tick[]>(async (Tick[] batchItems) =>
-        {
-            try
             {
-                if (batchItems.Length == 0)
-                    return;
-
-                await repository.SaveBatchAsync(batchItems, CancellationToken.None); // игнорировать отмену во время записи
-            }
-            catch (Exception ex)
+                try
+                {
+                    if (batchItems.Length == 0)
+                        return;
+                    logger.LogInformation("Batch = {Size}", batchItems.Length);
+                    await repository.SaveBatchAsync(batchItems,
+                        CancellationToken.None); // игнорировать отмену во время записи
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError("Save batch failed");
+                }
+            },
+            new ExecutionDataflowBlockOptions
             {
-                logger.LogError("Save batch failed");
-            }
-        },
-        new ExecutionDataflowBlockOptions
-        {
-            MaxDegreeOfParallelism = 1,
-            BoundedCapacity = 10
-        });
+                MaxDegreeOfParallelism = 1,
+                BoundedCapacity = 10
+            });
 
         var linkOptions = new DataflowLinkOptions { PropagateCompletion = true };
 
