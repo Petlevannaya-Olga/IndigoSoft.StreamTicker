@@ -46,9 +46,10 @@ public class DataflowPipelineBackgroundService(
                 {
                     if (batchItems.Length == 0)
                         return;
+                    
                     logger.LogInformation("Batch = {Size}", batchItems.Length);
-                    await repository.SaveBatchAsync(batchItems,
-                        CancellationToken.None); // игнорировать отмену во время записи
+                    
+                    await repository.SaveBatchAsync(batchItems, CancellationToken.None); // игнорировать отмену во время записи
                 }
                 catch (Exception ex)
                 {
@@ -72,7 +73,7 @@ public class DataflowPipelineBackgroundService(
             .Select(c => c.RunAsync(source, ct))
             .ToArray();
 
-        await Task.WhenAll(clientTasks);
+        await Task.WhenAny(clientTasks);
 
         source.Complete();
 
