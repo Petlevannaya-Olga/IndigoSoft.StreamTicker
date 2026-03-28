@@ -5,53 +5,79 @@ using Polly.Timeout;
 
 namespace IndigoSoft.StreamTicker.Infrastructure.Policies;
 
-public class WebSocketPolicy(ILogger<WebSocketPolicy> logger) : IWebSocketPolicy
+public class WebSocketPolicy : IWebSocketPolicy
 {
-    public async Task ExecuteAsync(Func<CancellationToken, Task> action, CancellationToken ct)
+    private readonly IAsyncPolicy _policy;
+
+    public WebSocketPolicy(ILogger<WebSocketPolicy> logger)
     {
-        // Circuit breaker: прерываем после 5 ошибок в течение 30 секунд
+        // Circuit breaker: разрываем цепь после 5 ошибок подряд и не даём выполнять операции 30 секунд
         var circuitBreaker = Policy
             .Handle<Exception>()
             .CircuitBreakerAsync(
                 exceptionsAllowedBeforeBreaking: 5,
                 durationOfBreak: TimeSpan.FromSeconds(30),
-                onBreak: (ex, breakDelay) => logger.LogWarning("Circuit broken for {Delay}s", breakDelay.TotalSeconds),
-                onReset: () => logger.LogInformation("Circuit reset"),
-                onHalfOpen: () => logger.LogInformation("Circuit half-open")
+                onBreak: (ex, breakDelay) =>
+                    logger.LogWarning("Circuit broken for {Delay}s", breakDelay.TotalSeconds),
+                onReset: () =>
+                    logger.LogInformation("Circuit reset"),
+                onHalfOpen: () =>
+                    logger.LogInformation("Circuit half-open")
             );
 
-        // Retry: пробуем заново 3 раза с экспоненциальной задержкой
+        // Retry: бесконечные попытки переподключения с экспоненциальной задержкой + декоррелированный jitter
         var retry = Policy
             .Handle<Exception>()
-            .WaitAndRetryAsync(
-                3,
-                retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
-                onRetry: (ex, delay) => logger.LogWarning("Retrying in {Delay}s", delay.TotalSeconds)
+            .WaitAndRetryForeverAsync(
+                sleepDurationProvider: attempt =>
+                {
+                    // Экспоненциальный рост задержки (2, 4, 8, 16, ...)
+                    var baseDelay = Math.Min(30, Math.Pow(2, attempt));
+
+                    // Декоррелированный jitter
+                    var delay = Random.Shared.Next(
+                        (int)baseDelay,
+                        (int)(baseDelay * 3)
+                    );
+
+                    return TimeSpan.FromSeconds(delay);
+                },
+                onRetry: (ex, delay) =>
+                    logger.LogWarning("Retrying in {Delay}s", delay.TotalSeconds)
             );
 
-        // Timeout: не даём выполняться дольше 10 секунд
+        // Timeout: ограничиваем длительность одной попытки (например, зависший сокет)
         var timeout = Policy.TimeoutAsync(
-            TimeSpan.FromSeconds(10),
-            TimeoutStrategy.Pessimistic,
-            onTimeoutAsync: (_, timespan, _) => 
+            timeout: TimeSpan.FromSeconds(10),
+            timeoutStrategy: TimeoutStrategy.Pessimistic,
+            onTimeoutAsync: (_, timespan, _) =>
             {
                 logger.LogWarning("Timeout after {Seconds}s", timespan.TotalSeconds);
                 return Task.CompletedTask;
             });
 
-        // Bulkhead: максимум 5 одновременных WebSocket-операций
+        // Bulkhead: ограничиваем количество одновременных операций
+        // защищает от перегрузки при массовых реконнектах
         var bulkhead = Policy.BulkheadAsync(
             maxParallelization: 5,
             maxQueuingActions: 10,
-            onBulkheadRejectedAsync: ctx =>
+            onBulkheadRejectedAsync: _ =>
             {
                 logger.LogWarning("Bulkhead rejected execution");
                 return Task.CompletedTask;
             });
 
-        // Комбинировать политики: Retry → CircuitBreaker → Timeout → Bulkhead
-        var policy = Policy.WrapAsync(bulkhead, timeout, circuitBreaker, retry);
-        
-        await policy.ExecuteAsync(action, ct);
+        // Retry снаружи!
+        _policy = Policy.WrapAsync(
+            retry,
+            circuitBreaker,
+            timeout,
+            bulkhead
+        );
+    }
+
+    public Task ExecuteAsync(Func<CancellationToken, Task> action, CancellationToken ct)
+    {
+        return _policy.ExecuteAsync(action, ct);
     }
 }

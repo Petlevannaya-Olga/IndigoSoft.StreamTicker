@@ -15,49 +15,47 @@ public class DefaultWebSocketClient(
 {
     public async Task RunAsync(ITargetBlock<Tick> target, CancellationToken ct)
     {
-        while (!ct.IsCancellationRequested)
+        try
         {
-            try
+            await policy.ExecuteAsync(async pollyCt =>
             {
-                await policy.ExecuteAsync(async pollyCt =>
-                {
-                    var ws = await connector.ConnectAsync(pollyCt);
+                var ws = await connector.ConnectAsync(pollyCt);
 
-                    await receiver.ReceiveAsync(
-                        ws,
-                        async message =>
+                await receiver.ReceiveAsync(
+                    ws,
+                    async message =>
+                    {
+                        var items = converter.Convert(message, pollyCt);
+
+                        if (items is null)
+                            return;
+
+                        foreach (var item in items)
                         {
-                            var items = converter.Convert(message, pollyCt);
-
-                            if (items is not null)
+                            // не блокируем поток, если pipeline перегружен
+                            if (!target.Post(item))
                             {
-                                foreach (var item in items)
-                                {
-                                    await target.SendAsync(item, pollyCt);
-                                }
+                                // система не успевает обработать входящий поток
+                                logger.LogWarning("Tick skipped due to backpressure");
                             }
-                        },
-                        pollyCt);
+                        }
 
-                    throw new Exception("WebSocket disconnected unexpectedly");
-                }, ct);
-            }
-            catch (OperationCanceledException) when (ct.IsCancellationRequested)
-            {
-                break;
-            }
-            catch (Exception ex)
-            {
-                logger.LogWarning("WebSocket error, reconnecting in 2 seconds...");
-                try
-                {
-                    await Task.Delay(TimeSpan.FromSeconds(2), ct);
-                }
-                catch
-                {
-                    // ignored
-                }
-            }
+                        await Task.CompletedTask;
+                    },
+                    pollyCt);
+
+                // Если вышли из ReceiveAsync — считаем это ошибкой для того, чтобы Polly инициировал reconnect
+                throw new Exception("WebSocket disconnected unexpectedly");
+
+            }, ct);
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            // нормальное завершение при остановке сервиса
+        }
+        catch (Exception ex) when (!ct.IsCancellationRequested)
+        {
+            logger.LogError(ex, "Unexpected error outside policy");
         }
 
         logger.LogInformation("{Client} stopped", GetType().Name);
