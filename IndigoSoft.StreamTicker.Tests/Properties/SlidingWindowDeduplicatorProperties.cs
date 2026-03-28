@@ -4,7 +4,7 @@ using IndigoSoft.StreamTicker.Infrastructure;
 
 namespace IndigoSoft.StreamTicker.Tests.Properties;
 
-public class DeduplicatorProperties
+public class SlidingWindowDeduplicatorProperties
 {
     private static bool IsValid(double value)
         => !double.IsNaN(value) && !double.IsInfinity(value);
