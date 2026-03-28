@@ -8,7 +8,6 @@ public class MetricsService : IMetricsService
     private int _in;
     private int _out;
     private int _deduplicated;
-    private int _dropped;
     private int _batch;
 
     public void IncrementIn()
