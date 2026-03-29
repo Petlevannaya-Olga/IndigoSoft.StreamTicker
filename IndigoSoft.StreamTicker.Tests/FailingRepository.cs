@@ -1,7 +1,7 @@
 ﻿using IndigoSoft.StreamTicker.Application;
 using IndigoSoft.StreamTicker.Domain;
 
-namespace IndigoSoft.StreamTicker.Tests.Integrations;
+namespace IndigoSoft.StreamTicker.Tests;
 
 public class FailingRepository(ITickRepository inner, int failAfter = 10) : ITickRepository
 {

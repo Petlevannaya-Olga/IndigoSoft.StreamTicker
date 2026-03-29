@@ -33,11 +33,12 @@ public class DefaultWebSocketClient(
                         foreach (var item in items)
                         {
                             // не блокируем поток, если pipeline перегружен
-                            if (!target.Post(item))
-                            {
-                                // система не успевает обработать входящий поток
-                                logger.LogWarning("Tick skipped due to backpressure");
-                            }
+                            //if (!target.Post(item))
+                            //{
+                            // система не успевает обработать входящий поток
+                            //    logger.LogWarning("Tick skipped due to backpressure");
+                            //}
+                            await target.SendAsync(item, pollyCt);
                         }
 
                         await Task.CompletedTask;
@@ -46,7 +47,6 @@ public class DefaultWebSocketClient(
 
                 // Если вышли из ReceiveAsync — считаем это ошибкой для того, чтобы Polly инициировал reconnect
                 throw new Exception("WebSocket disconnected unexpectedly");
-
             }, ct);
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)

@@ -2,19 +2,22 @@
 using IndigoSoft.StreamTicker.Application;
 using IndigoSoft.StreamTicker.Domain;
 
-namespace IndigoSoft.StreamTicker.Tests.Integrations;
+namespace IndigoSoft.StreamTicker.Tests;
 
 public class TestWebSocketClient(int ticks) : IWebSocketClient
 {
     public async Task RunAsync(ITargetBlock<Tick> target, CancellationToken ct)
     {
-        for (int i = 0; i < ticks; i++)
+        for (var i = 0; i < ticks; i++)
         {
-            await target.SendAsync(
+            var accepted = await target.SendAsync(
                 new Tick("Exchange", "AAPL", 100, 10, i),
                 ct);
-        }
 
-        target.Complete();
+            if (!accepted)
+            {
+                throw new Exception("Tick was not accepted by pipeline");
+            }
+        }
     }
 }

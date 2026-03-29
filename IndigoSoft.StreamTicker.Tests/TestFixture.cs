@@ -4,7 +4,7 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace IndigoSoft.StreamTicker.Tests.Integrations;
+namespace IndigoSoft.StreamTicker.Tests;
 
 public class TestFixture : IDisposable
 {

@@ -42,7 +42,7 @@ public class PipelineTests
             {
                 target.Post(CreateTick());
                 target.Post(CreateTick());
-                target.Complete(); // важно для завершения
+                // target.Complete(); // важно для завершения
                 return Task.CompletedTask;
             });
 
@@ -80,7 +80,7 @@ public class PipelineTests
             .Returns((ITargetBlock<Tick> target, CancellationToken ct) =>
             {
                 target.Post(CreateTick());
-                target.Complete();
+                // target.Complete();
                 return Task.CompletedTask;
             });
 
@@ -118,7 +118,7 @@ public class PipelineTests
             .Returns((ITargetBlock<Tick> target, CancellationToken ct) =>
             {
                 target.Post(CreateTick());
-                target.Complete();
+                // target.Complete();
                 return Task.CompletedTask;
             });
 
@@ -158,7 +158,7 @@ public class PipelineTests
             .Returns((ITargetBlock<Tick> target, CancellationToken ct) =>
             {
                 target.Post(CreateTick());
-                target.Complete();
+                // target.Complete();
                 return Task.CompletedTask;
             });
 
@@ -199,7 +199,7 @@ public class PipelineTests
                 for (var i = 0; i < 5000; i++)
                     target.Post(CreateTick());
 
-                target.Complete();
+                //target.Complete();
                 return Task.CompletedTask;
             });
 
@@ -247,7 +247,7 @@ public class PipelineTests
                         Interlocked.Increment(ref startCounter);
 
                         target.Post(CreateTick());
-                        target.Complete();
+                        //target.Complete();
 
                         return Task.CompletedTask;
                     });
@@ -295,7 +295,7 @@ public class PipelineTests
             .Returns((ITargetBlock<Tick> target, CancellationToken ct) =>
             {
                 target.Post(CreateTick());
-                target.Complete();
+                //target.Complete();
                 return Task.CompletedTask;
             });
 
@@ -333,7 +333,7 @@ public class PipelineTests
             .Returns((ITargetBlock<Tick> target, CancellationToken ct) =>
             {
                 target.Post(CreateTick());
-                target.Complete();
+                //target.Complete();
                 return Task.CompletedTask;
             });
 
@@ -386,7 +386,7 @@ public class PipelineTests
                         Interlocked.Decrement(ref current);
 
                         target.Post(new Tick("Exchange", "AAPL", 100, 10, 1));
-                        target.Complete();
+                        //target.Complete();
                     });
 
                 return client.Object;

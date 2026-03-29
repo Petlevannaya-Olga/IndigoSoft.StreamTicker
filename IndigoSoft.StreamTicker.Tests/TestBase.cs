@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 
-namespace IndigoSoft.StreamTicker.Tests.Integrations;
+namespace IndigoSoft.StreamTicker.Tests;
 
 public abstract class TestBase(TestFixture fixture) : IClassFixture<TestFixture>
 {

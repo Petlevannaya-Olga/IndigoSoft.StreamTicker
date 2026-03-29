@@ -18,6 +18,6 @@ public class LoadWebSocketClient(int ticks) : IWebSocketClient
                 ct);
         }
 
-        target.Complete();
+        // target.Complete();
     }
 }

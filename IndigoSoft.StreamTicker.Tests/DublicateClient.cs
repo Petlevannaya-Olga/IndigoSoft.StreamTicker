@@ -2,7 +2,7 @@
 using IndigoSoft.StreamTicker.Application;
 using IndigoSoft.StreamTicker.Domain;
 
-namespace IndigoSoft.StreamTicker.Tests.Integrations;
+namespace IndigoSoft.StreamTicker.Tests;
 
 public class DuplicateClient(int count = 100) : IWebSocketClient
 {
@@ -10,7 +10,7 @@ public class DuplicateClient(int count = 100) : IWebSocketClient
 
     public async Task RunAsync(ITargetBlock<Tick> target, CancellationToken ct)
     {
-        for (int i = 0; i < count; i++)
+        for (var i = 0; i < count; i++)
         {
             if (ct.IsCancellationRequested)
                 break;
@@ -21,7 +21,5 @@ public class DuplicateClient(int count = 100) : IWebSocketClient
 
             await target.SendAsync(_duplicateTick, ct);
         }
-
-        target.Complete();
     }
 }
