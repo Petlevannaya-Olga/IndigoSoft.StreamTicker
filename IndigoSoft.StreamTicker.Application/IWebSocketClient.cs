@@ -1,9 +1,6 @@
-﻿using System.Threading.Channels;
-using IndigoSoft.StreamTicker.Domain;
+﻿namespace IndigoSoft.StreamTicker.Application;
 
-namespace IndigoSoft.StreamTicker.Application;
-
-public interface IWebSocketClient
+public interface IWebSocketClient<in T>
 {
-    Task RunAsync(ChannelWriter<Tick> writer, CancellationToken ct);
+    Task RunAsync(T writer, CancellationToken ct);
 }

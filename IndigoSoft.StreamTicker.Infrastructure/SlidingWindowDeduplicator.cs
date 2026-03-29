@@ -4,35 +4,52 @@ using IndigoSoft.StreamTicker.Domain;
 
 namespace IndigoSoft.StreamTicker.Infrastructure;
 
-public class SlidingWindowDeduplicator<T>(int windowSize = 5000) : IDeduplicator<Tick>
+public class SlidingWindowDeduplicator : IDeduplicator
 {
-    private readonly ConcurrentQueue<int> _queue = new();
     private readonly ConcurrentDictionary<int, byte> _set = new();
+    private readonly int[] _ringBuffer;
+    private int _index = -1;
+    private readonly int _windowSize;
+
+    public SlidingWindowDeduplicator(int windowSize = 5000)
+    {
+        _windowSize = windowSize;
+        _ringBuffer = new int[windowSize];
+
+        // инициализируем массив
+        for (var i = 0; i < windowSize; i++)
+            _ringBuffer[i] = 0;
+    }
 
     public bool IsDuplicate(Tick tick)
     {
-        var keyHash = GetHashKey(tick);
+        var key = GetHashKey(tick);
 
-        if (!_set.TryAdd(keyHash, 0)) return true;
+        if (!_set.TryAdd(key, 0))
+            return true;
 
-        _queue.Enqueue(keyHash);
-        
-        if (_queue.Count > windowSize && _queue.TryDequeue(out var oldKey))
+        // получаем следующий индекс
+        var index = Interlocked.Increment(ref _index) % _windowSize;
+
+        // вытесняем старое значение
+        var oldKey = Interlocked.Exchange(ref _ringBuffer[index], key);
+
+        // удаляем старый элемент из set
+        if (oldKey != 0)
+        {
             _set.TryRemove(oldKey, out _);
+        }
 
         return false;
     }
 
     private static int GetHashKey(Tick tick)
     {
-        unchecked
-        {
-            var hash = 17;
-            hash = hash * 31 + tick.Symbol.GetHashCode();
-            hash = hash * 31 + tick.Price.GetHashCode();
-            hash = hash * 31 + tick.Volume.GetHashCode();
-            hash = hash * 31 + tick.EventTime.GetHashCode();
-            return hash;
-        }
+        return HashCode.Combine(
+            tick.Symbol,
+            tick.Price,
+            tick.Volume,
+            tick.EventTime
+        );
     }
 }

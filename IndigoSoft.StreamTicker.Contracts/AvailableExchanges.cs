@@ -3,5 +3,6 @@
 public enum AvailableExchanges
 {
     Binance,
-    Kraken
+    Kraken,
+    ByBit
 }
