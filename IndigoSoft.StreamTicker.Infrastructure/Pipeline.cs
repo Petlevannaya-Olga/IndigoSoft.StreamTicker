@@ -18,34 +18,37 @@ public class Pipeline(
     {
         var source = new BufferBlock<Tick>(new DataflowBlockOptions
         {
-            BoundedCapacity = 50_000
+            BoundedCapacity = 50_000,
+            CancellationToken = ct
         });
 
         var metricsBlock = new TransformBlock<Tick, Tick>(tick =>
-            {
-                metrics.IncrementIn();
-                return tick;
-            },
-            new ExecutionDataflowBlockOptions
-            {
-                MaxDegreeOfParallelism = Environment.ProcessorCount * 2
-            });
+        {
+            metrics.IncrementIn();
+            return tick;
+        },
+        new ExecutionDataflowBlockOptions
+        {
+            MaxDegreeOfParallelism = Environment.ProcessorCount * 2,
+            CancellationToken = ct
+        });
 
         var dedupBlock = new TransformManyBlock<Tick, Tick>(tick =>
+        {
+            if (deduplicator.IsDuplicate(tick))
             {
-                if (deduplicator.IsDuplicate(tick))
-                {
-                    metrics.IncrementDeduplicated();
-                    return [];
-                }
+                metrics.IncrementDeduplicated();
+                return Array.Empty<Tick>();
+            }
 
-                metrics.IncrementOut();
-                return [tick];
-            },
-            new ExecutionDataflowBlockOptions
-            {
-                MaxDegreeOfParallelism = Environment.ProcessorCount * 2
-            });
+            metrics.IncrementOut();
+            return [tick];
+        },
+        new ExecutionDataflowBlockOptions
+        {
+            MaxDegreeOfParallelism = Environment.ProcessorCount * 2,
+            CancellationToken = ct
+        });
 
         var batch = CreateBatchBlock<Tick>(
             batchSize: 2000,
@@ -53,31 +56,36 @@ public class Pipeline(
             ct);
 
         var writer = new ActionBlock<(Tick[] Items, int Count)>(async batchData =>
+        {
+            try
             {
-                try
-                {
-                    if (batchData.Count == 0)
-                        return;
+                if (batchData.Count == 0)
+                    return;
 
-                    metrics.IncrementBatch();
-                    logger.LogInformation("{TicksCount} ticks saved to Db", batchData.Count);
-                    await repository.SaveBatchAsync(batchData.Items, batchData.Count, CancellationToken.None); // игнорировать ct
-                }
-                catch (Exception ex)
-                {
-                    logger.LogError(ex, "Save batch failed");
-                }
-                finally
-                {
-                    ArrayPool<Tick>.Shared.Return(batchData.Items);
-                }
-            },
-            new ExecutionDataflowBlockOptions
+                metrics.IncrementBatch();
+                logger.LogInformation("{TicksCount} ticks saved to Db", batchData.Count);
+
+                await repository.SaveBatchAsync(
+                    batchData.Items,
+                    batchData.Count,
+                    ct); // не игнорируем ct
+            }
+            catch (Exception ex)
             {
-                MaxDegreeOfParallelism = 4,
-                BoundedCapacity = 10,
-                EnsureOrdered = false
-            });
+                logger.LogError(ex, "Save batch failed");
+            }
+            finally
+            {
+                ArrayPool<Tick>.Shared.Return(batchData.Items);
+            }
+        },
+        new ExecutionDataflowBlockOptions
+        {
+            MaxDegreeOfParallelism = 4,
+            BoundedCapacity = 10,
+            EnsureOrdered = false,
+            CancellationToken = ct
+        });
 
         var linkOptions = new DataflowLinkOptions
         {
@@ -109,57 +117,18 @@ public class Pipeline(
     {
         var pool = ArrayPool<T>.Shared;
 
-        var buffer = pool.Rent(batchSize);
-        var count = 0;
-
         var output = new BufferBlock<(T[] Items, int Count)>(new DataflowBlockOptions
         {
-            BoundedCapacity = 20
+            BoundedCapacity = 20,
+            CancellationToken = ct
         });
 
         var gate = new object();
 
-        var timer = new Timer(_ => Flush(), null, timeout, Timeout.InfiniteTimeSpan);
+        T[] buffer = pool.Rent(batchSize);
+        int count = 0;
 
-        var input = new ActionBlock<T>(item =>
-            {
-                T[]? fullBatch = null;
-                var fullSize = 0;
-
-                lock (gate)
-                {
-                    buffer[count++] = item;
-
-                    if (count >= batchSize)
-                    {
-                        fullBatch = buffer;
-                        fullSize = count;
-
-                        buffer = pool.Rent(batchSize);
-                        count = 0;
-                    }
-                }
-
-                // перезапускаем таймер при каждом событии
-                timer.Change(timeout, Timeout.InfiniteTimeSpan);
-
-                if (fullBatch != null)
-                    output.Post((fullBatch, fullSize));
-            },
-            new ExecutionDataflowBlockOptions
-            {
-                CancellationToken = ct,
-                MaxDegreeOfParallelism = 1
-            });
-
-        input.Completion.ContinueWith(_ =>
-        {
-            Flush();
-            output.Complete();
-            timer.Dispose();
-        }, ct);
-
-        return DataflowBlock.Encapsulate(input, output);
+        Timer? timer = null;
 
         void Flush()
         {
@@ -180,5 +149,47 @@ public class Pipeline(
 
             output.Post((batch, size));
         }
+
+        timer = new Timer(_ => Flush(), null, timeout, Timeout.InfiniteTimeSpan);
+
+        var input = new ActionBlock<T>(item =>
+        {
+            T[]? fullBatch = null;
+            var fullSize = 0;
+
+            lock (gate)
+            {
+                buffer[count++] = item;
+
+                if (count >= batchSize)
+                {
+                    fullBatch = buffer;
+                    fullSize = count;
+
+                    buffer = pool.Rent(batchSize);
+                    count = 0;
+                }
+            }
+
+            // перезапускаем таймер при каждом событии
+            timer?.Change(timeout, Timeout.InfiniteTimeSpan);
+
+            if (fullBatch != null)
+                output.Post((fullBatch, fullSize));
+        },
+        new ExecutionDataflowBlockOptions
+        {
+            CancellationToken = ct,
+            MaxDegreeOfParallelism = 1
+        });
+
+        input.Completion.ContinueWith(_ =>
+        {
+            Flush();
+            output.Complete();
+            timer?.Dispose();
+        }, ct);
+
+        return DataflowBlock.Encapsulate(input, output);
     }
 }
