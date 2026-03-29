@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks.Dataflow;
+﻿using System.Buffers;
+using System.Threading.Tasks.Dataflow;
 using IndigoSoft.StreamTicker.Application;
 using IndigoSoft.StreamTicker.Domain;
 using Microsoft.Extensions.Logging;
@@ -47,24 +48,12 @@ public class Pipeline(
                 MaxDegreeOfParallelism = Environment.ProcessorCount * 2
             });
 
-        var batch = new BatchBlock<Tick>(2000);
+        //var batch = new BatchBlock<Tick>(2000);
+        var batch = CreateBatchBlock<Tick>(
+            batchSize: 2000,
+            timeout: TimeSpan.FromSeconds(5),
+            ct);
         
-        // Чтобы не держать “висящую” таску
-        /*var batchFlusher = Task.Run(async () =>
-        {
-            try
-            {
-                while (!ct.IsCancellationRequested)
-                {
-                    await Task.Delay(1000, ct);
-                    batch.TriggerBatch();
-                }
-            }
-            catch (OperationCanceledException)
-            {
-            }
-        });*/
-
         var writer = new ActionBlock<Tick[]>(async (Tick[] batchItems) =>
             {
                 try
@@ -74,7 +63,7 @@ public class Pipeline(
                     
                     metrics.IncrementBatch(); // новый батч
                     
-                    await repository.SaveBatchAsync(batchItems, CancellationToken.None); // игнорировать отмену во время записи
+                    await repository.SaveBatchAsync(batchItems, ct); // игнорировать отмену во время записи?
                 }
                 catch (Exception ex)
                 {
@@ -104,8 +93,146 @@ public class Pipeline(
         source.Complete();
 
         await writer.Completion;
-        //await Task.WhenAll(writer.Completion, batchFlusher);
 
         logger.LogInformation("Pipeline completed");
+    }
+    
+    private static IPropagatorBlock<T, T[]> CreateBatchBlock<T>(
+        int batchSize,
+        TimeSpan timeout,
+        CancellationToken ct)
+    {
+        var buffer = new List<T>(batchSize);
+        var gate = new object();
+
+        var output = new BufferBlock<T[]>(new DataflowBlockOptions
+        {
+            BoundedCapacity = 20 // опционально, но полезно
+        });
+
+        var timer = new Timer(_ =>
+        {
+            Flush();
+        }, null, timeout, timeout);
+
+        var input = new ActionBlock<T>(item =>
+            {
+                T[]? batch = null;
+
+                lock (gate)
+                {
+                    buffer.Add(item);
+
+                    if (buffer.Count >= batchSize)
+                    {
+                        batch = buffer.ToArray();
+                        buffer.Clear();
+                    }
+                }
+
+                if (batch != null)
+                    output.Post(batch);
+            },
+            new ExecutionDataflowBlockOptions
+            {
+                CancellationToken = ct,
+                MaxDegreeOfParallelism = 1
+            });
+
+        input.Completion.ContinueWith(_ =>
+        {
+            Flush();
+            output.Complete();
+            timer.Dispose();
+        }, ct);
+
+        return DataflowBlock.Encapsulate(input, output);
+
+        void Flush()
+        {
+            T[]? batch = null;
+
+            lock (gate)
+            {
+                if (buffer.Count == 0)
+                    return;
+
+                batch = buffer.ToArray();
+                buffer.Clear();
+            }
+
+            output.Post(batch);
+        }
+    }
+    
+    private static IPropagatorBlock<T, T[]> CreatePooledBatchBlock<T>(
+        int batchSize,
+        TimeSpan timeout,
+        CancellationToken ct)
+    {
+        var pool = ArrayPool<T>.Shared;
+
+        var buffer = pool.Rent(batchSize);
+        var count = 0;
+
+        var gate = new object();
+
+        var output = new BufferBlock<T[]>(new DataflowBlockOptions
+        {
+            BoundedCapacity = 20
+        });
+
+        var timer = new Timer(_ => Flush(), null, timeout, timeout);
+
+        var input = new ActionBlock<T>(item =>
+            {
+                T[]? batch = null;
+
+                lock (gate)
+                {
+                    buffer[count++] = item;
+
+                    if (count >= batchSize)
+                    {
+                        batch = buffer;
+                        buffer = pool.Rent(batchSize);
+                        count = 0;
+                    }
+                }
+
+                if (batch != null)
+                    output.Post(batch);
+            },
+            new ExecutionDataflowBlockOptions
+            {
+                CancellationToken = ct,
+                MaxDegreeOfParallelism = 1
+            });
+
+        input.Completion.ContinueWith(_ =>
+        {
+            Flush();
+            output.Complete();
+            timer.Dispose();
+        }, ct);
+
+        return DataflowBlock.Encapsulate(input, output);
+
+        void Flush()
+        {
+            T[]? batch = null;
+
+            lock (gate)
+            {
+                if (count == 0)
+                    return;
+
+                batch = buffer;
+                buffer = pool.Rent(batchSize);
+                count = 0;
+            }
+
+            output.Post(batch);
+        }
     }
 }
