@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics;
 using FluentAssertions;
 using IndigoSoft.StreamTicker.Application;
-using IndigoSoft.StreamTicker.Infrastructure;
 using IndigoSoft.StreamTicker.Infrastructure.Pipelines;
 using Microsoft.Extensions.Logging;
 using TickDbContext = IndigoSoft.StreamTicker.Infrastructure.TickDbContext;
@@ -20,7 +19,7 @@ public class DataflowPipelineLoadTests(TestFixture fixture) : TestBase(fixture)
         var metrics = Get<IMetricsService>();
         var logger = Get<ILogger<DataflowPipeline>>();
 
-        var ticksCount = 100_000;
+        var ticksCount = 1_000_000;
 
         var client = new LoadWebSocketClient(ticksCount);
 
