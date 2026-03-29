@@ -16,25 +16,18 @@ public class DataflowPipeline(
 {
     public async Task RunAsync(CancellationToken ct)
     {
+        var clientList = clients.ToList();
+
         var source = new BufferBlock<Tick>(new DataflowBlockOptions
         {
             BoundedCapacity = 50_000,
             CancellationToken = ct
         });
 
-        var metricsBlock = new TransformBlock<Tick, Tick>(tick =>
+        var processBlock = new TransformManyBlock<Tick, Tick>(tick =>
         {
             metrics.IncrementIn();
-            return tick;
-        },
-        new ExecutionDataflowBlockOptions
-        {
-            MaxDegreeOfParallelism = Environment.ProcessorCount * 2,
-            CancellationToken = ct
-        });
 
-        var dedupBlock = new TransformManyBlock<Tick, Tick>(tick =>
-        {
             if (deduplicator.IsDuplicate(tick))
             {
                 metrics.IncrementDeduplicated();
@@ -47,12 +40,13 @@ public class DataflowPipeline(
         new ExecutionDataflowBlockOptions
         {
             MaxDegreeOfParallelism = Environment.ProcessorCount * 2,
+            EnsureOrdered = false,
             CancellationToken = ct
         });
 
         var batch = CreateBatchBlock<Tick>(
             batchSize: 2000,
-            timeout: TimeSpan.FromMilliseconds(1000), // flush
+            timeout: TimeSpan.FromMilliseconds(1000),
             ct);
 
         var writer = new ActionBlock<(Tick[] Items, int Count)>(async batchData =>
@@ -68,7 +62,7 @@ public class DataflowPipeline(
                 await repository.SaveBatchAsync(
                     batchData.Items,
                     batchData.Count,
-                    ct); // не игнорируем ct
+                    ct);
             }
             catch (Exception ex)
             {
@@ -92,13 +86,13 @@ public class DataflowPipeline(
             PropagateCompletion = true
         };
 
-        source.LinkTo(metricsBlock, linkOptions);
-        metricsBlock.LinkTo(dedupBlock, linkOptions);
-        dedupBlock.LinkTo(batch, linkOptions);
+        source.LinkTo(processBlock, linkOptions);
+        processBlock.LinkTo(batch, linkOptions);
         batch.LinkTo(writer, linkOptions);
 
-        logger.LogInformation("Pipeline started, clients count = {Count}", clients.Count());
-        var clientTasks = clients
+        logger.LogInformation("Pipeline started, clients count = {Count}", clientList.Count);
+
+        var clientTasks = clientList
             .Select(c => c.RunAsync(source, ct))
             .ToArray();
 
@@ -126,15 +120,13 @@ public class DataflowPipeline(
 
         var gate = new object();
 
-        T[] buffer = pool.Rent(batchSize);
-        int count = 0;
+        var buffer = pool.Rent(batchSize);
+        var count = 0;
 
-        Timer? timer = null;
-
-        void Flush()
+        async Task FlushAsync()
         {
-            T[]? batch;
-            int size;
+            T[]? batch = null;
+            var size = 0;
 
             lock (gate)
             {
@@ -148,15 +140,20 @@ public class DataflowPipeline(
                 count = 0;
             }
 
-            output.Post((batch, size));
+            try
+            {
+                await output.SendAsync((batch, size), ct);
+            }
+            catch (OperationCanceledException)
+            {
+                pool.Return(batch);
+            }
         }
 
-        timer = new Timer(_ => Flush(), null, timeout, Timeout.InfiniteTimeSpan);
-
-        var input = new ActionBlock<T>(item =>
+        var input = new ActionBlock<T>(async item =>
         {
             T[]? fullBatch = null;
-            var fullSize = 0;
+            int fullSize = 0;
 
             lock (gate)
             {
@@ -172,24 +169,46 @@ public class DataflowPipeline(
                 }
             }
 
-            // перезапускаем таймер при каждом событии
-            timer?.Change(timeout, Timeout.InfiniteTimeSpan);
-
             if (fullBatch != null)
-                output.Post((fullBatch, fullSize));
+            {
+                try
+                {
+                    await output.SendAsync((fullBatch, fullSize), ct);
+                }
+                catch (OperationCanceledException)
+                {
+                    pool.Return(fullBatch);
+                }
+            }
         },
         new ExecutionDataflowBlockOptions
         {
             CancellationToken = ct,
-            MaxDegreeOfParallelism = 1
+            MaxDegreeOfParallelism = 1,
+            EnsureOrdered = false
         });
 
-        input.Completion.ContinueWith(_ =>
+        _ = Task.Run(async () =>
         {
-            Flush();
-            output.Complete();
-            timer?.Dispose();
+            try
+            {
+                while (!ct.IsCancellationRequested)
+                {
+                    await Task.Delay(timeout, ct);
+                    await FlushAsync();
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                // ignore
+            }
         }, ct);
+
+        input.Completion.ContinueWith(async _ =>
+        {
+            await FlushAsync();
+            output.Complete();
+        }, CancellationToken.None); // не передавать
 
         return DataflowBlock.Encapsulate(input, output);
     }
