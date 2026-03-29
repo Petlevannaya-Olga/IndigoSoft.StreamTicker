@@ -29,12 +29,13 @@ public static class ServiceCollectionExtensions
     {
         services.AddSingleton<IMessageConverter, BinanceMessageConverter>();
         services.AddSingleton<BinanceMessageConverter>();
-        
+
         services.AddSingleton<IMessageConverter, KrakenMessageConverter>();
         services.AddSingleton<KrakenMessageConverter>();
-        
+
         services.AddSingleton<IMessageConverter, ByBitMessageConverter>();
         services.AddSingleton<ByBitMessageConverter>();
+
         return services;
     }
 
@@ -42,58 +43,122 @@ public static class ServiceCollectionExtensions
     {
         services.AddDbContext<TickDbContext>(opt =>
             opt.UseSqlite(configuration.GetConnectionString("DefaultConnection")));
+
         services.AddScoped<ITickRepository, TickRepository>();
+
         return services;
     }
 
     public static IServiceCollection AddWebSocketConnectors(this IServiceCollection services)
     {
-        services.AddSingleton<KrakenWebSocketConnector>(sp =>
-        {
-            var options = sp.GetRequiredService<IOptions<ExchangeOptions>>().Value;
-            return new KrakenWebSocketConnector(
-                new Uri(options.Kraken.Url),
-                options.Kraken.Symbols,
-                sp.GetRequiredService<ILogger<KrakenWebSocketConnector>>());
-        });
+        services.AddKeyedSingleton<KrakenWebSocketConnector>("kraken",
+            (sp, key) =>
+            {
+                var options = sp.GetRequiredService<IOptions<ExchangeOptions>>().Value;
 
-        services.AddSingleton<ByBitWebSocketConnector>(sp =>
-        {
-            var options = sp.GetRequiredService<IOptions<ExchangeOptions>>().Value;
-            return new ByBitWebSocketConnector(
-                new Uri(options.ByBit.Url),
-                options.ByBit.Symbols,
-                sp.GetRequiredService<ILogger<ByBitWebSocketConnector>>());
-        });
+                return new KrakenWebSocketConnector(
+                    new Uri(options.Kraken.Url),
+                    options.Kraken.Symbols,
+                    sp.GetRequiredService<ILogger<KrakenWebSocketConnector>>());
+            });
 
-        services.AddSingleton<BinanceWebSocketConnector>(sp =>
-        {
-            var options = sp.GetRequiredService<IOptions<ExchangeOptions>>().Value;
-            var uri = new Uri(
-                $"wss://stream.binance.com:9443/stream?streams={string.Join("@trade/", options.Binance.Symbols).ToLower()}@trade");
-            return new BinanceWebSocketConnector(
-                uri,
-                sp.GetRequiredService<ILogger<BinanceWebSocketConnector>>());
-        });
+        services.AddKeyedSingleton<ByBitWebSocketConnector>("bybit",
+            (sp, key) =>
+            {
+                var options = sp.GetRequiredService<IOptions<ExchangeOptions>>().Value;
+
+                return new ByBitWebSocketConnector(
+                    new Uri(options.ByBit.Url),
+                    options.ByBit.Symbols,
+                    sp.GetRequiredService<ILogger<ByBitWebSocketConnector>>());
+            });
+
+        services.AddKeyedSingleton<BinanceWebSocketConnector>("binance-1",
+            (sp, key) =>
+            {
+                var symbols = new[] { "ethbtc","ltcbtc","bnbbtc","neobtc","qtumeth","eoseth","snteth","bnteth","bccbtc","gasbtc","bnbeth","btcusdt","ethusdt","hsrbtc","oaxeth" };
+
+                var uri = new Uri(
+                    $"wss://stream.binance.com:9443/stream?streams={string.Join("@trade/", symbols).ToLower()}@trade");
+
+                return new BinanceWebSocketConnector(
+                    uri,
+                    sp.GetRequiredService<ILogger<BinanceWebSocketConnector>>());
+            });
+
+        services.AddKeyedSingleton<BinanceWebSocketConnector>("binance-2",
+            (sp, key) =>
+            {
+                var symbols = new[] { "dnteth","mcoeth","icneth","mcobtc","wtcbtc","wtceth","lrcbtc","lrceth","qtumbtc","yoyobtc","omgbtc","omgeth","zrxbtc","zrxeth","stratbtc" };
+
+                var uri = new Uri(
+                    $"wss://stream.binance.com:9443/stream?streams={string.Join("@trade/", symbols).ToLower()}@trade");
+
+                return new BinanceWebSocketConnector(
+                    uri,
+                    sp.GetRequiredService<ILogger<BinanceWebSocketConnector>>());
+            });
         
+        services.AddKeyedSingleton<BinanceWebSocketConnector>("binance-3",
+            (sp, key) =>
+            {
+                var symbols = new[] { "strateth","snglsbtc","snglseth","bqxbtc","bqxeth","kncbtc","knceth","funbtc","funeth","snmbtc","snmeth","neoeth","iotabtc","iotaeth","linkbtc" };
+
+                var uri = new Uri(
+                    $"wss://stream.binance.com:9443/stream?streams={string.Join("@trade/", symbols).ToLower()}@trade");
+
+                return new BinanceWebSocketConnector(
+                    uri,
+                    sp.GetRequiredService<ILogger<BinanceWebSocketConnector>>());
+            });
+        
+        services.AddKeyedSingleton<BinanceWebSocketConnector>("binance-4",
+            (sp, key) =>
+            {
+                var symbols = new[] { "linketh","xvgbtc","xvgeth","saltbtc","salteth","mdabtc","mdaeth","mtlbtc","mtleth","subbtc","subeth","eosbtc","sntbtc","etceth","etcbtc","mthbtc" };
+
+                var uri = new Uri(
+                    $"wss://stream.binance.com:9443/stream?streams={string.Join("@trade/", symbols).ToLower()}@trade");
+
+                return new BinanceWebSocketConnector(
+                    uri,
+                    sp.GetRequiredService<ILogger<BinanceWebSocketConnector>>());
+            });
+
         return services;
     }
-    
+
     public static IServiceCollection AddWebSocketClients(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddTransient<IWebSocketClient<ITargetBlock<Tick>>>(CreateClient<BinanceWebSocketConnector, BinanceMessageConverter>);
-        services.AddTransient<IWebSocketClient<ITargetBlock<Tick>>>(CreateClient<KrakenWebSocketConnector, KrakenMessageConverter>);
-        services.AddTransient<IWebSocketClient<ITargetBlock<Tick>>>(CreateClient<ByBitWebSocketConnector, ByBitMessageConverter>);
+        services.AddTransient<IWebSocketClient<ITargetBlock<Tick>>>(sp =>
+            CreateClient<BinanceWebSocketConnector, BinanceMessageConverter>(sp, "binance-1"));
+
+        services.AddTransient<IWebSocketClient<ITargetBlock<Tick>>>(sp =>
+            CreateClient<BinanceWebSocketConnector, BinanceMessageConverter>(sp, "binance-2"));
+        
+        services.AddTransient<IWebSocketClient<ITargetBlock<Tick>>>(sp =>
+            CreateClient<BinanceWebSocketConnector, BinanceMessageConverter>(sp, "binance-3"));
+        
+        services.AddTransient<IWebSocketClient<ITargetBlock<Tick>>>(sp =>
+            CreateClient<BinanceWebSocketConnector, BinanceMessageConverter>(sp, "binance-4"));
+
+        services.AddTransient<IWebSocketClient<ITargetBlock<Tick>>>(sp =>
+            CreateClient<KrakenWebSocketConnector, KrakenMessageConverter>(sp, "kraken"));
+
+        services.AddTransient<IWebSocketClient<ITargetBlock<Tick>>>(sp =>
+            CreateClient<ByBitWebSocketConnector, ByBitMessageConverter>(sp, "bybit"));
 
         return services;
     }
-    
-    private static DataflowWebSocketClient CreateClient<TConnector, TConverter>(IServiceProvider sp)
+
+    private static DataflowWebSocketClient CreateClient<TConnector, TConverter>(
+        IServiceProvider sp,
+        object key)
         where TConnector : IWebSocketConnector
         where TConverter : IMessageConverter
     {
         return new DataflowWebSocketClient(
-            sp.GetRequiredService<TConnector>(),
+            sp.GetRequiredKeyedService<TConnector>(key),
             sp.GetRequiredService<IMessageReceiver>(),
             sp.GetRequiredService<TConverter>(),
             sp.GetRequiredService<IWebSocketPolicy>(),

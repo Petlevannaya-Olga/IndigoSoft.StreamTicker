@@ -37,7 +37,7 @@ public class MetricsService : IMetricsService
             In = Interlocked.Exchange(ref _in, 0),
             Out = Interlocked.Exchange(ref _out, 0),
             Deduplicated = Interlocked.Exchange(ref _deduplicated, 0),
-            BatchCount = Interlocked.Exchange(ref _batch, 0)
+            BatchCount = Volatile.Read(ref _batch)//Interlocked.Exchange(ref _batch, 0)
         };
     }
 }
