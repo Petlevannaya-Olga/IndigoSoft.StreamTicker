@@ -8,7 +8,7 @@ using TickDbContext = IndigoSoft.StreamTicker.Infrastructure.TickDbContext;
 namespace IndigoSoft.StreamTicker.Tests.Loads;
 
 [Trait("Category", "Load")]
-public class PipelineLoadTests(TestFixture fixture) : TestBase(fixture)
+public class DataflowPipelineLoadTests(TestFixture fixture) : TestBase(fixture)
 {
     [Fact]
     public async Task Should_handle_100k_ticks()
@@ -17,13 +17,13 @@ public class PipelineLoadTests(TestFixture fixture) : TestBase(fixture)
         var repository = Get<ITickRepository>();
         var deduplicator = Get<IDeduplicator>();
         var metrics = Get<IMetricsService>();
-        var logger = Get<ILogger<Pipeline>>();
+        var logger = Get<ILogger<DataflowPipeline>>();
 
         var ticksCount = 100_000;
 
         var client = new LoadWebSocketClient(ticksCount);
 
-        var pipeline = new Pipeline(
+        var pipeline = new DataflowPipeline(
             [client],
             repository,
             deduplicator,

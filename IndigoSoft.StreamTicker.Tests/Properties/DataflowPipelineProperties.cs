@@ -8,21 +8,21 @@ using Moq;
 
 namespace IndigoSoft.StreamTicker.Tests.Properties;
 
-public class PipelineProperties(TestFixture fixture) : TestBase(fixture)
+public class DataflowPipelineProperties(TestFixture fixture) : TestBase(fixture)
 {
     [Property]
     public async Task Pipeline_should_always_complete(int tickCount)
     {
         tickCount = Math.Abs(tickCount % 1000); // ограничим диапазон
 
-        var client = new TestWebSocketClient(tickCount);
+        var client = new TestDataflowWebSocketClient(tickCount);
 
-        var pipeline = new Pipeline(
+        var pipeline = new DataflowPipeline(
             [client],
             Get<ITickRepository>(),
             Get<IDeduplicator>(),
             Get<IMetricsService>(),
-            Get<ILogger<Pipeline>>());
+            Get<ILogger<DataflowPipeline>>());
 
         var task = pipeline.RunAsync(CancellationToken.None);
 
@@ -40,12 +40,12 @@ public class PipelineProperties(TestFixture fixture) : TestBase(fixture)
 
         var client = new DuplicateClient(); // специально генерит дубликаты
 
-        var pipeline = new Pipeline(
+        var pipeline = new DataflowPipeline(
             [client],
             Get<ITickRepository>(),
             Get<IDeduplicator>(),
             Get<IMetricsService>(),
-            Get<ILogger<Pipeline>>());
+            Get<ILogger<DataflowPipeline>>());
 
         await pipeline.RunAsync(CancellationToken.None);
 
@@ -73,14 +73,14 @@ public class PipelineProperties(TestFixture fixture) : TestBase(fixture)
             .Returns(Task.CompletedTask)
             .Callback<IEnumerable<Tick>, CancellationToken>((batch, _) => { savedBatches.Add(batch.ToArray()); });
 
-        var client = new TestWebSocketClient(tickCount);
+        var client = new TestDataflowWebSocketClient(tickCount);
 
-        var pipeline = new Pipeline(
+        var pipeline = new DataflowPipeline(
             [client],
             repository.Object,
             Get<IDeduplicator>(),
             Get<IMetricsService>(),
-            Get<ILogger<Pipeline>>());
+            Get<ILogger<DataflowPipeline>>());
 
         await pipeline.RunAsync(CancellationToken.None);
 
@@ -102,14 +102,14 @@ public class PipelineProperties(TestFixture fixture) : TestBase(fixture)
     {
         tickCount = Math.Abs(tickCount % 500);
 
-        var client = new TestWebSocketClient(tickCount);
+        var client = new TestDataflowWebSocketClient(tickCount);
 
-        var pipeline = new Pipeline(
+        var pipeline = new DataflowPipeline(
             [client],
             Get<ITickRepository>(),
             Get<IDeduplicator>(),
             Get<IMetricsService>(),
-            Get<ILogger<Pipeline>>());
+            Get<ILogger<DataflowPipeline>>());
 
         await pipeline.RunAsync(CancellationToken.None);
 

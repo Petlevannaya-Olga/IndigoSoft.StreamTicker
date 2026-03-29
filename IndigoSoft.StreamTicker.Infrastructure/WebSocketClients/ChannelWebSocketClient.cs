@@ -1,19 +1,19 @@
-﻿using System.Threading.Tasks.Dataflow;
+﻿using System.Threading.Channels;
 using IndigoSoft.StreamTicker.Application;
 using IndigoSoft.StreamTicker.Domain;
 using Microsoft.Extensions.Logging;
 
 namespace IndigoSoft.StreamTicker.Infrastructure.WebSocketClients;
 
-public class DefaultWebSocketClient(
+public class ChannelWebSocketClient(
     IWebSocketConnector connector,
     IMessageReceiver receiver,
     IMessageConverter converter,
     IWebSocketPolicy policy,
-    ILogger<DefaultWebSocketClient> logger)
-    : IWebSocketClient
+    ILogger<ChannelWebSocketClient> logger)
+    : IWebSocketClient<ChannelWriter<Tick>>
 {
-    public async Task RunAsync(ITargetBlock<Tick> target, CancellationToken ct)
+    public async Task RunAsync(ChannelWriter<Tick> writer, CancellationToken ct)
     {
         try
         {
@@ -32,26 +32,22 @@ public class DefaultWebSocketClient(
 
                         foreach (var item in items)
                         {
-                            // не блокируем поток, если pipeline перегружен
-                            //if (!target.Post(item))
-                            //{
-                            // система не успевает обработать входящий поток
-                            //    logger.LogWarning("Tick skipped due to backpressure");
-                            //}
-                            await target.SendAsync(item, pollyCt);
+                            // backpressure: если канал перегружен — ждём
+                            await writer.WriteAsync(item, pollyCt);
                         }
 
                         await Task.CompletedTask;
                     },
                     pollyCt);
 
-                // Если вышли из ReceiveAsync — считаем это ошибкой для того, чтобы Polly инициировал reconnect
+                // Если вышли из ReceiveAsync — считаем это ошибкой для reconnect
                 throw new Exception("WebSocket disconnected unexpectedly");
+
             }, ct);
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
         {
-            // нормальное завершение при остановке сервиса
+            // нормальное завершение
         }
         catch (Exception ex) when (!ct.IsCancellationRequested)
         {

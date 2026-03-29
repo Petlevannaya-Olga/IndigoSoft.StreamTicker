@@ -4,7 +4,7 @@ using IndigoSoft.StreamTicker.Domain;
 
 namespace IndigoSoft.StreamTicker.Tests.Loads;
 
-public class LoadWebSocketClient(int ticks) : IWebSocketClient
+public class LoadWebSocketClient(int ticks) : IWebSocketClient<ITargetBlock<Tick>>
 {
     public async Task RunAsync(ITargetBlock<Tick> target, CancellationToken ct)
     {

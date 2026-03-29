@@ -3,7 +3,7 @@ using Microsoft.Extensions.Hosting;
 
 namespace IndigoSoft.StreamTicker.Infrastructure;
 
-public class DataflowPipelineBackgroundService(
+public class PipelineBackgroundService(
     IPipeline pipeline)
     : BackgroundService
 {

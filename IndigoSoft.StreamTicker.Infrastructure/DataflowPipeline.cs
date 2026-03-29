@@ -6,12 +6,12 @@ using Microsoft.Extensions.Logging;
 
 namespace IndigoSoft.StreamTicker.Infrastructure;
 
-public class Pipeline(
-    IEnumerable<IWebSocketClient> clients,
+public class DataflowPipeline(
+    IEnumerable<IWebSocketClient<ITargetBlock<Tick>>> clients,
     ITickRepository repository,
     IDeduplicator deduplicator,
     IMetricsService metrics,
-    ILogger<Pipeline> logger)
+    ILogger<DataflowPipeline> logger)
     : IPipeline
 {
     public async Task RunAsync(CancellationToken ct)

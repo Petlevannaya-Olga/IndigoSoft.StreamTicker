@@ -15,7 +15,7 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddBackgroundServices(this IServiceCollection services)
     {
-        services.AddHostedService<DataflowPipelineBackgroundService>();
+        services.AddHostedService<PipelineBackgroundService>();
         services.AddHostedService<MetricsBackgroundService>();
         services.AddSingleton<IMetricsService, MetricsService>();
 
@@ -78,23 +78,23 @@ public static class ServiceCollectionExtensions
     
     public static IServiceCollection AddWebSocketClients(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddTransient<IWebSocketClient>(CreateClient<BinanceWebSocketConnector, BinanceMessageConverter>);
-        services.AddTransient<IWebSocketClient>(CreateClient<KrakenWebSocketConnector, KrakenMessageConverter>);
-        services.AddTransient<IWebSocketClient>(CreateClient<ByBitWebSocketConnector, ByBitMessageConverter>);
+        services.AddTransient<DataflowWebSocketClient>(CreateClient<BinanceWebSocketConnector, BinanceMessageConverter>);
+        services.AddTransient<DataflowWebSocketClient>(CreateClient<KrakenWebSocketConnector, KrakenMessageConverter>);
+        services.AddTransient<DataflowWebSocketClient>(CreateClient<ByBitWebSocketConnector, ByBitMessageConverter>);
 
         return services;
     }
     
-    private static DefaultWebSocketClient CreateClient<TConnector, TConverter>(IServiceProvider sp)
+    private static DataflowWebSocketClient CreateClient<TConnector, TConverter>(IServiceProvider sp)
         where TConnector : IWebSocketConnector
         where TConverter : IMessageConverter
     {
-        return new DefaultWebSocketClient(
+        return new DataflowWebSocketClient(
             sp.GetRequiredService<TConnector>(),
             sp.GetRequiredService<IMessageReceiver>(),
             sp.GetRequiredService<TConverter>(),
             sp.GetRequiredService<IWebSocketPolicy>(),
-            sp.GetRequiredService<ILogger<DefaultWebSocketClient>>()
+            sp.GetRequiredService<ILogger<DataflowWebSocketClient>>()
         );
     }
 }

@@ -8,7 +8,7 @@ using Moq;
 
 namespace IndigoSoft.StreamTicker.Tests.Units;
 
-public class PipelineTests
+public class DataflowPipelineTests
 {
     private Tick CreateTick(
         string symbol = "AAPL",
@@ -26,7 +26,7 @@ public class PipelineTests
         var repository = new Mock<ITickRepository>();
         var deduplicator = new Mock<IDeduplicator>();
         var metrics = new Mock<IMetricsService>();
-        var logger = new Mock<ILogger<Pipeline>>();
+        var logger = new Mock<ILogger<DataflowPipeline>>();
 
         deduplicator.Setup(d => d.IsDuplicate(It.IsAny<Tick>()))
             .Returns(false);
@@ -44,7 +44,7 @@ public class PipelineTests
             })
             .Returns(Task.CompletedTask);
 
-        var client = new Mock<IWebSocketClient>();
+        var client = new Mock<IWebSocketClient<ITargetBlock<Tick>>>();
 
         client.Setup(c => c.RunAsync(
                 It.IsAny<ITargetBlock<Tick>>(),
@@ -59,7 +59,7 @@ public class PipelineTests
                 return Task.CompletedTask;
             });
 
-        var pipeline = new Pipeline(
+        var pipeline = new DataflowPipeline(
             [client.Object],
             repository.Object,
             deduplicator.Object,
@@ -88,12 +88,12 @@ public class PipelineTests
         var repository = new Mock<ITickRepository>();
         var deduplicator = new Mock<IDeduplicator>();
         var metrics = new Mock<IMetricsService>();
-        var logger = new Mock<ILogger<Pipeline>>();
+        var logger = new Mock<ILogger<DataflowPipeline>>();
 
         deduplicator.Setup(d => d.IsDuplicate(It.IsAny<Tick>()))
             .Returns(true);
 
-        var client = new Mock<IWebSocketClient>();
+        var client = new Mock<IWebSocketClient<ITargetBlock<Tick>>>();
 
         client.Setup(c => c.RunAsync(It.IsAny<ITargetBlock<Tick>>(), It.IsAny<CancellationToken>()))
             .Returns((ITargetBlock<Tick> target, CancellationToken ct) =>
@@ -103,7 +103,7 @@ public class PipelineTests
                 return Task.CompletedTask;
             });
 
-        var pipeline = new Pipeline(
+        var pipeline = new DataflowPipeline(
             [client.Object],
             repository.Object,
             deduplicator.Object,
@@ -126,12 +126,12 @@ public class PipelineTests
         var repository = new Mock<ITickRepository>();
         var deduplicator = new Mock<IDeduplicator>();
         var metrics = new Mock<IMetricsService>();
-        var logger = new Mock<ILogger<Pipeline>>();
+        var logger = new Mock<ILogger<DataflowPipeline>>();
 
         deduplicator.Setup(d => d.IsDuplicate(It.IsAny<Tick>()))
             .Returns(false);
 
-        var client = new Mock<IWebSocketClient>();
+        var client = new Mock<IWebSocketClient<ITargetBlock<Tick>>>();
 
         client.Setup(c => c.RunAsync(It.IsAny<ITargetBlock<Tick>>(), It.IsAny<CancellationToken>()))
             .Returns((ITargetBlock<Tick> target, CancellationToken ct) =>
@@ -141,7 +141,7 @@ public class PipelineTests
                 return Task.CompletedTask;
             });
 
-        var pipeline = new Pipeline(
+        var pipeline = new DataflowPipeline(
             [client.Object],
             repository.Object,
             deduplicator.Object,
@@ -162,7 +162,7 @@ public class PipelineTests
         var repository = new Mock<ITickRepository>();
         var deduplicator = new Mock<IDeduplicator>();
         var metrics = new Mock<IMetricsService>();
-        var logger = new Mock<ILogger<Pipeline>>();
+        var logger = new Mock<ILogger<DataflowPipeline>>();
 
         deduplicator.Setup(d => d.IsDuplicate(It.IsAny<Tick>()))
             .Returns(false);
@@ -171,7 +171,7 @@ public class PipelineTests
             .Setup(r => r.SaveBatchAsync(It.IsAny<Tick[]>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        var client = new Mock<IWebSocketClient>();
+        var client = new Mock<IWebSocketClient<ITargetBlock<Tick>>>();
 
         client.Setup(c => c.RunAsync(It.IsAny<ITargetBlock<Tick>>(), It.IsAny<CancellationToken>()))
             .Returns((ITargetBlock<Tick> target, CancellationToken ct) =>
@@ -181,7 +181,7 @@ public class PipelineTests
                 return Task.CompletedTask;
             });
 
-        var pipeline = new Pipeline(
+        var pipeline = new DataflowPipeline(
             [client.Object],
             repository.Object,
             deduplicator.Object,
@@ -202,7 +202,7 @@ public class PipelineTests
         var repository = new Mock<ITickRepository>();
         var deduplicator = new Mock<IDeduplicator>();
         var metrics = new Mock<IMetricsService>();
-        var logger = new Mock<ILogger<Pipeline>>();
+        var logger = new Mock<ILogger<DataflowPipeline>>();
 
         deduplicator.Setup(d => d.IsDuplicate(It.IsAny<Tick>()))
             .Returns(false);
@@ -220,7 +220,7 @@ public class PipelineTests
             })
             .Returns(Task.CompletedTask);
 
-        var client = new Mock<IWebSocketClient>();
+        var client = new Mock<IWebSocketClient<ITargetBlock<Tick>>>();
 
         client.Setup(c => c.RunAsync(It.IsAny<ITargetBlock<Tick>>(), It.IsAny<CancellationToken>()))
             .Returns((ITargetBlock<Tick> target, CancellationToken ct) =>
@@ -233,7 +233,7 @@ public class PipelineTests
                 return Task.CompletedTask;
             });
 
-        var pipeline = new Pipeline(
+        var pipeline = new DataflowPipeline(
             [client.Object],
             repository.Object,
             deduplicator.Object,
@@ -260,7 +260,7 @@ public class PipelineTests
         var repository = new Mock<ITickRepository>();
         var deduplicator = new Mock<IDeduplicator>();
         var metrics = new Mock<IMetricsService>();
-        var logger = new Mock<ILogger<Pipeline>>();
+        var logger = new Mock<ILogger<DataflowPipeline>>();
 
         deduplicator.Setup(d => d.IsDuplicate(It.IsAny<Tick>()))
             .Returns(false);
@@ -279,7 +279,7 @@ public class PipelineTests
         var clients = Enumerable.Range(0, 3)
             .Select(_ =>
             {
-                var client = new Mock<IWebSocketClient>();
+                var client = new Mock<IWebSocketClient<ITargetBlock<Tick>>>();
 
                 client.Setup(c => c.RunAsync(
                         It.IsAny<ITargetBlock<Tick>>(),
@@ -297,7 +297,7 @@ public class PipelineTests
             })
             .ToArray();
 
-        var pipeline = new Pipeline(
+        var pipeline = new DataflowPipeline(
             clients,
             repository.Object,
             deduplicator.Object,
@@ -329,12 +329,12 @@ public class PipelineTests
         var repository = new Mock<ITickRepository>();
         var deduplicator = new Mock<IDeduplicator>();
         var metrics = new Mock<IMetricsService>();
-        var logger = new Mock<ILogger<Pipeline>>();
+        var logger = new Mock<ILogger<DataflowPipeline>>();
 
         deduplicator.Setup(d => d.IsDuplicate(It.IsAny<Tick>()))
             .Returns(true);
 
-        var client = new Mock<IWebSocketClient>();
+        var client = new Mock<IWebSocketClient<ITargetBlock<Tick>>>();
 
         client.Setup(c => c.RunAsync(It.IsAny<ITargetBlock<Tick>>(), It.IsAny<CancellationToken>()))
             .Returns((ITargetBlock<Tick> target, CancellationToken ct) =>
@@ -344,7 +344,7 @@ public class PipelineTests
                 return Task.CompletedTask;
             });
 
-        var pipeline = new Pipeline(
+        var pipeline = new DataflowPipeline(
             [client.Object],
             repository.Object,
             deduplicator.Object,
@@ -363,7 +363,7 @@ public class PipelineTests
         var repository = new Mock<ITickRepository>();
         var deduplicator = new Mock<IDeduplicator>();
         var metrics = new Mock<IMetricsService>();
-        var logger = new Mock<ILogger<Pipeline>>();
+        var logger = new Mock<ILogger<DataflowPipeline>>();
 
         deduplicator.Setup(d => d.IsDuplicate(It.IsAny<Tick>()))
             .Returns(false);
@@ -372,7 +372,7 @@ public class PipelineTests
             .Setup(r => r.SaveBatchAsync(It.IsAny<Tick[]>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new Exception("DB fail"));
 
-        var client = new Mock<IWebSocketClient>();
+        var client = new Mock<IWebSocketClient<ITargetBlock<Tick>>>();
 
         client.Setup(c => c.RunAsync(It.IsAny<ITargetBlock<Tick>>(), It.IsAny<CancellationToken>()))
             .Returns((ITargetBlock<Tick> target, CancellationToken ct) =>
@@ -382,7 +382,7 @@ public class PipelineTests
                 return Task.CompletedTask;
             });
 
-        var pipeline = new Pipeline(
+        var pipeline = new DataflowPipeline(
             [client.Object],
             repository.Object,
             deduplicator.Object,
@@ -400,7 +400,7 @@ public class PipelineTests
         var repository = new Mock<ITickRepository>();
         var deduplicator = new Mock<IDeduplicator>();
         var metrics = new Mock<IMetricsService>();
-        var logger = new Mock<ILogger<Pipeline>>();
+        var logger = new Mock<ILogger<DataflowPipeline>>();
 
         deduplicator.Setup(d => d.IsDuplicate(It.IsAny<Tick>()))
             .Returns(false);
@@ -416,7 +416,7 @@ public class PipelineTests
         var clients = Enumerable.Range(0, 3)
             .Select(i =>
             {
-                var client = new Mock<IWebSocketClient>();
+                var client = new Mock<IWebSocketClient<ITargetBlock<Tick>>>();
 
                 client.Setup(c => c.RunAsync(It.IsAny<ITargetBlock<Tick>>(), It.IsAny<CancellationToken>()))
                     .Returns(async (ITargetBlock<Tick> target, CancellationToken ct) =>
@@ -438,7 +438,7 @@ public class PipelineTests
             })
             .ToArray();
 
-        var pipeline = new Pipeline(
+        var pipeline = new DataflowPipeline(
             clients,
             repository.Object,
             deduplicator.Object,
