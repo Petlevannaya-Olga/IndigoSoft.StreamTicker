@@ -23,8 +23,7 @@ public class Pipeline(
 
         var metricsBlock = new TransformBlock<Tick, Tick>(tick =>
             {
-                metrics.IncrementIn(); // входящий тик
-                // logger.LogInformation("Exchange = {Exchange}, Symbol = {Symbol}, Price = {Price}", tick.Exchange, tick.Symbol, tick.Price);
+                metrics.IncrementIn();
                 return tick;
             },
             new ExecutionDataflowBlockOptions
@@ -36,11 +35,11 @@ public class Pipeline(
             {
                 if (deduplicator.IsDuplicate(tick))
                 {
-                    metrics.IncrementDeduplicated(); // отфильтровано
-                    return Enumerable.Empty<Tick>();;
+                    metrics.IncrementDeduplicated();
+                    return [];
                 }
 
-                metrics.IncrementOut(); // прошёл дальше
+                metrics.IncrementOut();
                 return [tick];
             },
             new ExecutionDataflowBlockOptions
@@ -48,26 +47,29 @@ public class Pipeline(
                 MaxDegreeOfParallelism = Environment.ProcessorCount * 2
             });
 
-        //var batch = new BatchBlock<Tick>(2000);
         var batch = CreateBatchBlock<Tick>(
             batchSize: 2000,
-            timeout: TimeSpan.FromSeconds(5),
+            timeout: TimeSpan.FromMilliseconds(1000), // flush
             ct);
-        
-        var writer = new ActionBlock<Tick[]>(async (Tick[] batchItems) =>
+
+        var writer = new ActionBlock<(Tick[] Items, int Count)>(async batchData =>
             {
                 try
                 {
-                    if (batchItems.Length == 0)
+                    if (batchData.Count == 0)
                         return;
-                    
-                    metrics.IncrementBatch(); // новый батч
-                    
-                    await repository.SaveBatchAsync(batchItems, ct); // игнорировать отмену во время записи?
+
+                    metrics.IncrementBatch();
+                    logger.LogInformation("{TicksCount} ticks saved to Db", batchData.Count);
+                    await repository.SaveBatchAsync(batchData.Items, batchData.Count, CancellationToken.None); // игнорировать ct
                 }
                 catch (Exception ex)
                 {
                     logger.LogError(ex, "Save batch failed");
+                }
+                finally
+                {
+                    ArrayPool<Tick>.Shared.Return(batchData.Items);
                 }
             },
             new ExecutionDataflowBlockOptions
@@ -77,7 +79,10 @@ public class Pipeline(
                 EnsureOrdered = false
             });
 
-        var linkOptions = new DataflowLinkOptions { PropagateCompletion = true };
+        var linkOptions = new DataflowLinkOptions
+        {
+            PropagateCompletion = true
+        };
 
         source.LinkTo(metricsBlock, linkOptions);
         metricsBlock.LinkTo(dedupBlock, linkOptions);
@@ -96,76 +101,8 @@ public class Pipeline(
 
         logger.LogInformation("Pipeline completed");
     }
-    
-    private static IPropagatorBlock<T, T[]> CreateBatchBlock<T>(
-        int batchSize,
-        TimeSpan timeout,
-        CancellationToken ct)
-    {
-        var buffer = new List<T>(batchSize);
-        var gate = new object();
 
-        var output = new BufferBlock<T[]>(new DataflowBlockOptions
-        {
-            BoundedCapacity = 20 // опционально, но полезно
-        });
-
-        var timer = new Timer(_ =>
-        {
-            Flush();
-        }, null, timeout, timeout);
-
-        var input = new ActionBlock<T>(item =>
-            {
-                T[]? batch = null;
-
-                lock (gate)
-                {
-                    buffer.Add(item);
-
-                    if (buffer.Count >= batchSize)
-                    {
-                        batch = buffer.ToArray();
-                        buffer.Clear();
-                    }
-                }
-
-                if (batch != null)
-                    output.Post(batch);
-            },
-            new ExecutionDataflowBlockOptions
-            {
-                CancellationToken = ct,
-                MaxDegreeOfParallelism = 1
-            });
-
-        input.Completion.ContinueWith(_ =>
-        {
-            Flush();
-            output.Complete();
-            timer.Dispose();
-        }, ct);
-
-        return DataflowBlock.Encapsulate(input, output);
-
-        void Flush()
-        {
-            T[]? batch = null;
-
-            lock (gate)
-            {
-                if (buffer.Count == 0)
-                    return;
-
-                batch = buffer.ToArray();
-                buffer.Clear();
-            }
-
-            output.Post(batch);
-        }
-    }
-    
-    private static IPropagatorBlock<T, T[]> CreatePooledBatchBlock<T>(
+    private static IPropagatorBlock<T, (T[] Items, int Count)> CreateBatchBlock<T>(
         int batchSize,
         TimeSpan timeout,
         CancellationToken ct)
@@ -175,18 +112,19 @@ public class Pipeline(
         var buffer = pool.Rent(batchSize);
         var count = 0;
 
-        var gate = new object();
-
-        var output = new BufferBlock<T[]>(new DataflowBlockOptions
+        var output = new BufferBlock<(T[] Items, int Count)>(new DataflowBlockOptions
         {
             BoundedCapacity = 20
         });
 
-        var timer = new Timer(_ => Flush(), null, timeout, timeout);
+        var gate = new object();
+
+        var timer = new Timer(_ => Flush(), null, timeout, Timeout.InfiniteTimeSpan);
 
         var input = new ActionBlock<T>(item =>
             {
-                T[]? batch = null;
+                T[]? fullBatch = null;
+                var fullSize = 0;
 
                 lock (gate)
                 {
@@ -194,14 +132,19 @@ public class Pipeline(
 
                     if (count >= batchSize)
                     {
-                        batch = buffer;
+                        fullBatch = buffer;
+                        fullSize = count;
+
                         buffer = pool.Rent(batchSize);
                         count = 0;
                     }
                 }
 
-                if (batch != null)
-                    output.Post(batch);
+                // перезапускаем таймер при каждом событии
+                timer.Change(timeout, Timeout.InfiniteTimeSpan);
+
+                if (fullBatch != null)
+                    output.Post((fullBatch, fullSize));
             },
             new ExecutionDataflowBlockOptions
             {
@@ -220,7 +163,8 @@ public class Pipeline(
 
         void Flush()
         {
-            T[]? batch = null;
+            T[]? batch;
+            int size;
 
             lock (gate)
             {
@@ -228,11 +172,13 @@ public class Pipeline(
                     return;
 
                 batch = buffer;
+                size = count;
+
                 buffer = pool.Rent(batchSize);
                 count = 0;
             }
 
-            output.Post(batch);
+            output.Post((batch, size));
         }
     }
 }

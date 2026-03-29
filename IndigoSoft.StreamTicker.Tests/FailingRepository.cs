@@ -18,4 +18,9 @@ public class FailingRepository(ITickRepository inner, int failAfter = 10) : ITic
 
         await inner.SaveBatchAsync(ticks, ct);
     }
+
+    public async Task SaveBatchAsync(Tick[] ticks, int count, CancellationToken ct)
+    {
+        throw new NotImplementedException();
+    }
 }

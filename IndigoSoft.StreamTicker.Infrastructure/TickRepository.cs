@@ -1,4 +1,5 @@
-﻿using IndigoSoft.StreamTicker.Application;
+﻿using EFCore.BulkExtensions;
+using IndigoSoft.StreamTicker.Application;
 using IndigoSoft.StreamTicker.Domain;
 
 namespace IndigoSoft.StreamTicker.Infrastructure;
@@ -21,5 +22,13 @@ public class TickRepository : ITickRepository
 
         await _dbContext.Ticks.AddRangeAsync(list, ct);
         await _dbContext.SaveChangesAsync(ct);
+    }
+    
+    public async Task SaveBatchAsync(Tick[] ticks, int count, CancellationToken ct)
+    {
+        if (count == 0)
+            return;
+
+        await _dbContext.BulkInsertAsync(ticks.Take(count).ToList(), cancellationToken: ct);
     }
 }

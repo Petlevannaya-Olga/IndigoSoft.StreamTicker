@@ -31,18 +31,31 @@ public class PipelineTests
         deduplicator.Setup(d => d.IsDuplicate(It.IsAny<Tick>()))
             .Returns(false);
 
+        var savedBatches = new List<int>();
+
         repository
-            .Setup(r => r.SaveBatchAsync(It.IsAny<Tick[]>(), It.IsAny<CancellationToken>()))
+            .Setup(r => r.SaveBatchAsync(
+                It.IsAny<Tick[]>(),
+                It.IsAny<int>(),
+                It.IsAny<CancellationToken>()))
+            .Callback<Tick[], int, CancellationToken>((_, count, _) =>
+            {
+                savedBatches.Add(count);
+            })
             .Returns(Task.CompletedTask);
 
         var client = new Mock<IWebSocketClient>();
 
-        client.Setup(c => c.RunAsync(It.IsAny<ITargetBlock<Tick>>(), It.IsAny<CancellationToken>()))
+        client.Setup(c => c.RunAsync(
+                It.IsAny<ITargetBlock<Tick>>(),
+                It.IsAny<CancellationToken>()))
             .Returns((ITargetBlock<Tick> target, CancellationToken ct) =>
             {
                 target.Post(CreateTick());
                 target.Post(CreateTick());
-                // target.Complete(); // важно для завершения
+
+                target.Complete();
+
                 return Task.CompletedTask;
             });
 
@@ -57,8 +70,14 @@ public class PipelineTests
         await pipeline.RunAsync(CancellationToken.None);
 
         // Assert
+
+        savedBatches.Should().NotBeEmpty();
+
+        savedBatches.Sum().Should().Be(2);
+
         repository.Verify(r => r.SaveBatchAsync(
                 It.IsAny<Tick[]>(),
+                It.IsAny<int>(),
                 It.IsAny<CancellationToken>()),
             Times.AtLeastOnce);
     }
@@ -179,6 +198,7 @@ public class PipelineTests
     [Fact]
     public async Task Should_create_batches()
     {
+        // Arrange
         var repository = new Mock<ITickRepository>();
         var deduplicator = new Mock<IDeduplicator>();
         var metrics = new Mock<IMetricsService>();
@@ -187,8 +207,17 @@ public class PipelineTests
         deduplicator.Setup(d => d.IsDuplicate(It.IsAny<Tick>()))
             .Returns(false);
 
+        var savedBatchSizes = new List<int>();
+
         repository
-            .Setup(r => r.SaveBatchAsync(It.IsAny<Tick[]>(), It.IsAny<CancellationToken>()))
+            .Setup(r => r.SaveBatchAsync(
+                It.IsAny<Tick[]>(),
+                It.IsAny<int>(),
+                It.IsAny<CancellationToken>()))
+            .Callback<Tick[], int, CancellationToken>((_, count, _) =>
+            {
+                savedBatchSizes.Add(count);
+            })
             .Returns(Task.CompletedTask);
 
         var client = new Mock<IWebSocketClient>();
@@ -197,9 +226,10 @@ public class PipelineTests
             .Returns((ITargetBlock<Tick> target, CancellationToken ct) =>
             {
                 for (var i = 0; i < 5000; i++)
+                {
                     target.Post(CreateTick());
+                }
 
-                //target.Complete();
                 return Task.CompletedTask;
             });
 
@@ -210,12 +240,17 @@ public class PipelineTests
             metrics.Object,
             logger.Object);
 
+        // Act
         await pipeline.RunAsync(CancellationToken.None);
 
-        repository.Verify(r => r.SaveBatchAsync(
-                It.Is<Tick[]>(batch => batch.Length <= 2000),
-                It.IsAny<CancellationToken>()),
-            Times.AtLeastOnce);
+        // Assert
+
+        savedBatchSizes.Should().NotBeEmpty();
+
+        savedBatchSizes.Should().AllSatisfy(size =>
+            size.Should().BeInRange(1, 2000));
+
+        savedBatchSizes.Sum().Should().Be(5000);
     }
 
     [Fact]
@@ -230,24 +265,30 @@ public class PipelineTests
         deduplicator.Setup(d => d.IsDuplicate(It.IsAny<Tick>()))
             .Returns(false);
 
-        repository
-            .Setup(r => r.SaveBatchAsync(It.IsAny<Tick[]>(), It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
-
         var startCounter = 0;
+        var savedCount = 0;
+
+        repository
+            .Setup(r => r.SaveBatchAsync(
+                It.IsAny<Tick[]>(),
+                It.IsAny<int>(),
+                It.IsAny<CancellationToken>()))
+            .Callback(() => Interlocked.Increment(ref savedCount))
+            .Returns(Task.CompletedTask);
 
         var clients = Enumerable.Range(0, 3)
             .Select(_ =>
             {
                 var client = new Mock<IWebSocketClient>();
 
-                client.Setup(c => c.RunAsync(It.IsAny<ITargetBlock<Tick>>(), It.IsAny<CancellationToken>()))
+                client.Setup(c => c.RunAsync(
+                        It.IsAny<ITargetBlock<Tick>>(),
+                        It.IsAny<CancellationToken>()))
                     .Returns((ITargetBlock<Tick> target, CancellationToken ct) =>
                     {
                         Interlocked.Increment(ref startCounter);
 
                         target.Post(CreateTick());
-                        //target.Complete();
 
                         return Task.CompletedTask;
                     });
@@ -268,12 +309,16 @@ public class PipelineTests
 
         // Assert
 
-        // Проверяем, что все клиенты реально были запущены
+        // Все клиенты стартовали
         startCounter.Should().Be(3);
 
-        // Проверяем, что данные дошли до репозитория
+        // Хотя бы один батч сохранился
+        savedCount.Should().BeGreaterThan(0);
+
+        // Проверка вызова репозитория
         repository.Verify(r => r.SaveBatchAsync(
                 It.IsAny<Tick[]>(),
+                It.IsAny<int>(),
                 It.IsAny<CancellationToken>()),
             Times.AtLeastOnce);
     }

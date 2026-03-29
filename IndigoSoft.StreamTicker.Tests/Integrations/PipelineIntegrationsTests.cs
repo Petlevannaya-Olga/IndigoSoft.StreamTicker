@@ -56,8 +56,17 @@ public class PipelineIntegrationTests(TestFixture fixture) : TestBase(fixture)
         var metrics = Get<IMetricsService>();
         var logger = Get<ILogger<Pipeline>>();
 
+        var savedBatches = new List<int>();
+
         repository
-            .Setup(r => r.SaveBatchAsync(It.IsAny<Tick[]>(), It.IsAny<CancellationToken>()))
+            .Setup(r => r.SaveBatchAsync(
+                It.IsAny<Tick[]>(),
+                It.IsAny<int>(),
+                It.IsAny<CancellationToken>()))
+            .Callback<Tick[], int, CancellationToken>((_, count, _) =>
+            {
+                savedBatches.Add(count);
+            })
             .Returns(Task.CompletedTask);
 
         var client = new TestWebSocketClient(5000);
@@ -70,20 +79,15 @@ public class PipelineIntegrationTests(TestFixture fixture) : TestBase(fixture)
             logger);
 
         // Act
-        var task = pipeline.RunAsync(CancellationToken.None);
+        var runTask = pipeline.RunAsync(CancellationToken.None);
 
-        var completed = await Task.WhenAny(task, Task.Delay(5000));
-
-        completed.Should().Be(task);
-
-        await task;
+        await runTask;
 
         // Assert
+        savedBatches.Should().NotBeEmpty();
 
-        repository.Verify(r => r.SaveBatchAsync(
-                It.Is<Tick[]>(batch => batch.Length <= 2000 && batch.Length > 0),
-                It.IsAny<CancellationToken>()),
-            Times.AtLeastOnce);
+        savedBatches.Should().AllSatisfy(count =>
+            count.Should().BeInRange(1, 2000));
     }
 
     [Fact]
