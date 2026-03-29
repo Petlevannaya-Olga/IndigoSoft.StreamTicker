@@ -17,7 +17,7 @@ public class DefaultMessageReceiver(ILogger<DefaultMessageReceiver> logger) : IM
 
         try
         {
-            while (!ct.IsCancellationRequested)
+            while (!ct.IsCancellationRequested) 
             {
                 var (success, msg) = await TryReadMessageAsync(ws, buffer, ct);
 
