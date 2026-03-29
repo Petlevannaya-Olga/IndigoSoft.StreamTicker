@@ -115,10 +115,8 @@ public static class ServiceCollectionExtensions
         services.AddKeyedSingleton<BinanceWebSocketConnector>("binance-4",
             (sp, key) =>
             {
-                var symbols = new[] { "linketh","xvgbtc","xvgeth","saltbtc","salteth","mdabtc","mdaeth","mtlbtc","mtleth","subbtc","subeth","eosbtc","sntbtc","etceth","etcbtc","mthbtc" };
-
                 var uri = new Uri(
-                    $"wss://stream.binance.com:9443/stream?streams={string.Join("@trade/", symbols).ToLower()}@trade");
+                    $"ws://localhost:5000/ws"); // для использования фейковой генерации тиков
 
                 return new BinanceWebSocketConnector(
                     uri,
