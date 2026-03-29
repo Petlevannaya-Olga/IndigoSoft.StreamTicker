@@ -8,13 +8,13 @@ namespace IndigoSoft.StreamTicker.Infrastructure.WebSocketConnectors;
 
 public class KrakenWebSocketConnector(Uri uri, string[] symbols, ILogger<KrakenWebSocketConnector> logger) : IWebSocketConnector
 {
-    public async Task<ClientWebSocket> ConnectAsync(CancellationToken ct)
+    public async Task<IWebSocketConnection> ConnectAsync(CancellationToken ct)
     {
         var ws = new ClientWebSocket();
         await ws.ConnectAsync(uri, ct);
         logger.LogInformation("Connected to {Uri}", uri);
         await SubscribeAsync(ws, ct);
-        return ws;
+        return new ClientWebSocketAdapter(ws);
     }
 
     private async Task SubscribeAsync(ClientWebSocket ws, CancellationToken ct)

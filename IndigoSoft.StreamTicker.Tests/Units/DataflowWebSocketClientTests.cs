@@ -108,18 +108,18 @@ public class DataflowWebSocketClientTests
 
         var target = new BufferBlock<Tick>();
 
-        var ws = new ClientWebSocket();
+        var ws = new Mock<IWebSocketConnection>();
 
         var messageHandled = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
 
         connector.Setup(x => x.ConnectAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(ws);
+            .ReturnsAsync(ws.Object);
 
         receiver.Setup(x => x.ReceiveAsync(
-                ws,
+                ws.Object,
                 It.IsAny<Func<string, Task>>(),
                 It.IsAny<CancellationToken>()))
-            .Returns(async (ClientWebSocket _, Func<string, Task> handler, CancellationToken ct) =>
+            .Returns(async (IWebSocketConnection _, Func<string, Task> handler, CancellationToken ct) =>
             {
                 await handler("test message");
                 messageHandled.TrySetResult(true);

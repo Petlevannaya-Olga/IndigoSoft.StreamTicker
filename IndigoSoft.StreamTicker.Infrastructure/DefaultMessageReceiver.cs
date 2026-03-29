@@ -11,7 +11,7 @@ public class DefaultMessageReceiver(ILogger<DefaultMessageReceiver> logger) : IM
     private const int BufferSize = 16 * 1024;
     private const int MaxMessageSize = 1024 * 1024; // 1 MB limit
 
-    public async Task ReceiveAsync(ClientWebSocket ws, Func<string, Task> onMessage, CancellationToken ct)
+    public async Task ReceiveAsync(IWebSocketConnection ws, Func<string, Task> onMessage, CancellationToken ct)
     {
         var buffer = ArrayPool<byte>.Shared.Rent(BufferSize);
 
@@ -28,6 +28,7 @@ public class DefaultMessageReceiver(ILogger<DefaultMessageReceiver> logger) : IM
                 }
 
                 if (string.IsNullOrEmpty(msg)) continue;
+
                 try
                 {
                     await onMessage(msg);
@@ -53,7 +54,7 @@ public class DefaultMessageReceiver(ILogger<DefaultMessageReceiver> logger) : IM
     }
 
     private async Task<(bool success, string? message)> TryReadMessageAsync(
-        ClientWebSocket ws,
+        IWebSocketConnection ws,
         byte[] buffer,
         CancellationToken ct)
     {

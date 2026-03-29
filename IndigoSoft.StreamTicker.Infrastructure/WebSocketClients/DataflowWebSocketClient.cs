@@ -19,7 +19,7 @@ public class DataflowWebSocketClient(
         {
             await policy.ExecuteAsync(async pollyCt =>
             {
-                var ws = await connector.ConnectAsync(pollyCt);
+                IWebSocketConnection ws = await connector.ConnectAsync(pollyCt);
 
                 await receiver.ReceiveAsync(
                     ws,
