@@ -8,6 +8,7 @@ public interface IMetricsService
     void IncrementOut();
     void IncrementDeduplicated();
     void IncrementBatch();
+    void IncrementTicksCount(int count);
 
     MetricsSnapshot GetAndReset();
 }

@@ -18,11 +18,12 @@ public class MetricsBackgroundService(
                 var tps = metrics.GetAndReset();
 
                 logger.LogInformation(
-                    "IN: {TpsIn}, OUT: {TpsOut}, BatchCount: {BatchCount}, Deduplicated: {DeduplicatedCount}",
+                    "IN: {TpsIn}, OUT: {TpsOut}, BatchCount: {BatchCount}, Deduplicated: {DeduplicatedCount}, Ticks: {TicksCount}",
                     tps.In,
                     tps.Out,
                     tps.BatchCount,
-                    tps.Deduplicated);
+                    tps.Deduplicated,
+                    tps.TicksCount);
 
                 await Task.Delay(1000, ct);
             }

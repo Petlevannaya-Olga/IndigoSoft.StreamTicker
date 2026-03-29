@@ -21,4 +21,9 @@ public sealed class MetricsSnapshot
     /// Сколько батчей записано
     /// </summary>
     public int BatchCount { get; init; }
+    
+    /// <summary>
+    /// Количество тиков, сохраненных в БД
+    /// </summary>
+    public int TicksCount { get; init; }
 }

@@ -9,7 +9,7 @@ public class MetricsService : IMetricsService
     private int _out;
     private int _deduplicated;
     private int _batch;
-    private int _dropped;
+    private int _ticksCount;
 
     public void IncrementIn()
     {
@@ -30,7 +30,12 @@ public class MetricsService : IMetricsService
     {
         Interlocked.Increment(ref _batch);
     }
-    
+
+    public void IncrementTicksCount(int count)
+    {
+        Interlocked.Add(ref _ticksCount, count);
+    }
+
     public MetricsSnapshot GetAndReset()
     {
         return new MetricsSnapshot
@@ -39,6 +44,7 @@ public class MetricsService : IMetricsService
             Out = Interlocked.Exchange(ref _out, 0),
             Deduplicated = Interlocked.Exchange(ref _deduplicated, 0),
             BatchCount = Volatile.Read(ref _batch),
+            TicksCount = Volatile.Read(ref _ticksCount)
         };
     }
 }

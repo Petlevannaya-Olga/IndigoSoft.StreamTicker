@@ -57,6 +57,7 @@ public class DataflowPipeline(
                     return;
 
                 metrics.IncrementBatch();
+                metrics.IncrementTicksCount(batchData.Count);
                 logger.LogInformation("{TicksCount} ticks saved to Db", batchData.Count);
 
                 await repository.SaveBatchAsync(
