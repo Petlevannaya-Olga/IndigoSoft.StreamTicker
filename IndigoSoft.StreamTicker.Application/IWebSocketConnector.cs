@@ -1,6 +1,4 @@
-﻿using System.Net.WebSockets;
-
-namespace IndigoSoft.StreamTicker.Application;
+﻿namespace IndigoSoft.StreamTicker.Application;
 
 public interface IWebSocketConnector
 {

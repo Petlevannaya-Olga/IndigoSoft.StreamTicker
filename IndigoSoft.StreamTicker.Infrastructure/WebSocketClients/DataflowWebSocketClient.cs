@@ -19,7 +19,7 @@ public class DataflowWebSocketClient(
         {
             await policy.ExecuteAsync(async pollyCt =>
             {
-                IWebSocketConnection ws = await connector.ConnectAsync(pollyCt);
+                var ws = await connector.ConnectAsync(pollyCt);
 
                 await receiver.ReceiveAsync(
                     ws,
@@ -32,7 +32,9 @@ public class DataflowWebSocketClient(
 
                         foreach (var item in items)
                         {
-                            await target.SendAsync(item, pollyCt);
+                            var accepted = await target.SendAsync(item, pollyCt);
+                            if(!accepted)
+                                logger.LogError("Dropped ticket");
                         }
 
                         await Task.CompletedTask;

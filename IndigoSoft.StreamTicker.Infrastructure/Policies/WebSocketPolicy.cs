@@ -67,9 +67,8 @@ public class WebSocketPolicy : IWebSocketPolicy
                 return Task.CompletedTask;
             });
 
-        // Retry снаружи!
         _policy = Policy.WrapAsync(
-            retry,
+            retry,  // Retry снаружи!
             circuitBreaker,
             timeout,
             bulkhead

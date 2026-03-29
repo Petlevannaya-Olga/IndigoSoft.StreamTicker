@@ -123,37 +123,10 @@ public class DataflowPipeline(
         var buffer = pool.Rent(batchSize);
         var count = 0;
 
-        async Task FlushAsync()
-        {
-            T[]? batch = null;
-            var size = 0;
-
-            lock (gate)
-            {
-                if (count == 0)
-                    return;
-
-                batch = buffer;
-                size = count;
-
-                buffer = pool.Rent(batchSize);
-                count = 0;
-            }
-
-            try
-            {
-                await output.SendAsync((batch, size), ct);
-            }
-            catch (OperationCanceledException)
-            {
-                pool.Return(batch);
-            }
-        }
-
         var input = new ActionBlock<T>(async item =>
         {
             T[]? fullBatch = null;
-            int fullSize = 0;
+            var fullSize = 0;
 
             lock (gate)
             {
@@ -212,5 +185,32 @@ public class DataflowPipeline(
         }, CancellationToken.None);
 
         return DataflowBlock.Encapsulate(input, output);
+
+        async Task FlushAsync()
+        {
+            T[]? batch = null;
+            var size = 0;
+
+            lock (gate)
+            {
+                if (count == 0)
+                    return;
+
+                batch = buffer;
+                size = count;
+
+                buffer = pool.Rent(batchSize);
+                count = 0;
+            }
+
+            try
+            {
+                await output.SendAsync((batch, size), ct);
+            }
+            catch (OperationCanceledException)
+            {
+                pool.Return(batch);
+            }
+        }
     }
 }

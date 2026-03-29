@@ -1,12 +1,5 @@
 ﻿namespace IndigoSoft.StreamTicker.Infrastructure.Options;
 
-public class SymbolsOptions
-{
-    public string[] Kraken { get; set; } = [];
-    public string[] Binance { get; set; } = [];
-    public string[] ByBit { get; set; } = [];
-}
-
 public class ExchangeOptions
 {
     public KrakenOptions Kraken { get; set; } = new ();
