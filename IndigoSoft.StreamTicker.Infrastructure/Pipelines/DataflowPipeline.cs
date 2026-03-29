@@ -46,7 +46,7 @@ public class DataflowPipeline(
 
         var batch = CreateBatchBlock<Tick>(
             batchSize: 2000,
-            timeout: TimeSpan.FromMilliseconds(1000),
+            timeout: TimeSpan.FromMilliseconds(5000),
             ct);
 
         var writer = new ActionBlock<(Tick[] Items, int Count)>(async batchData =>
@@ -204,11 +204,12 @@ public class DataflowPipeline(
             }
         }, ct);
 
-        input.Completion.ContinueWith(async _ =>
+        // гарантирует завершение flush
+        input.Completion.ContinueWith(_ =>
         {
-            await FlushAsync();
+            FlushAsync().GetAwaiter().GetResult();
             output.Complete();
-        }, CancellationToken.None); // не передавать
+        }, CancellationToken.None);
 
         return DataflowBlock.Encapsulate(input, output);
     }
