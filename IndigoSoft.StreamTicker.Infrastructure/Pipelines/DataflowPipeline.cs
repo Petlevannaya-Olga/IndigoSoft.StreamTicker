@@ -4,7 +4,7 @@ using IndigoSoft.StreamTicker.Application;
 using IndigoSoft.StreamTicker.Domain;
 using Microsoft.Extensions.Logging;
 
-namespace IndigoSoft.StreamTicker.Infrastructure;
+namespace IndigoSoft.StreamTicker.Infrastructure.Pipelines;
 
 public class DataflowPipeline(
     IEnumerable<IWebSocketClient<ITargetBlock<Tick>>> clients,

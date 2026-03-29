@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace IndigoSoft.StreamTicker.Infrastructure;
+namespace IndigoSoft.StreamTicker.Infrastructure.BackgroundServices;
 
 public class MetricsBackgroundService(
     IMetricsService metrics,

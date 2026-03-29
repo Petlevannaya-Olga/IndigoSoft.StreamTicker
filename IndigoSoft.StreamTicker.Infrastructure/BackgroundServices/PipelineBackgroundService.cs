@@ -1,7 +1,7 @@
 ﻿using IndigoSoft.StreamTicker.Application;
 using Microsoft.Extensions.Hosting;
 
-namespace IndigoSoft.StreamTicker.Infrastructure;
+namespace IndigoSoft.StreamTicker.Infrastructure.BackgroundServices;
 
 public class PipelineBackgroundService(
     IPipeline pipeline)

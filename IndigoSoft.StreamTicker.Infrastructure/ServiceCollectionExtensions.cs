@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks.Dataflow;
 using IndigoSoft.StreamTicker.Application;
 using IndigoSoft.StreamTicker.Domain;
+using IndigoSoft.StreamTicker.Infrastructure.BackgroundServices;
 using IndigoSoft.StreamTicker.Infrastructure.MessageConverters;
 using IndigoSoft.StreamTicker.Infrastructure.Options;
 using IndigoSoft.StreamTicker.Infrastructure.WebSocketClients;

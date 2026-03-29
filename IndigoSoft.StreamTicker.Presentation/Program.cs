@@ -2,6 +2,7 @@
 using IndigoSoft.StreamTicker.Application;
 using IndigoSoft.StreamTicker.Infrastructure;
 using IndigoSoft.StreamTicker.Infrastructure.Options;
+using IndigoSoft.StreamTicker.Infrastructure.Pipelines;
 using IndigoSoft.StreamTicker.Infrastructure.Policies;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

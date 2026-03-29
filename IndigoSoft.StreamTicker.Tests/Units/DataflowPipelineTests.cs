@@ -3,6 +3,7 @@ using FluentAssertions;
 using IndigoSoft.StreamTicker.Application;
 using IndigoSoft.StreamTicker.Domain;
 using IndigoSoft.StreamTicker.Infrastructure;
+using IndigoSoft.StreamTicker.Infrastructure.Pipelines;
 using Microsoft.Extensions.Logging;
 using Moq;
 

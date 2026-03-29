@@ -32,12 +32,6 @@ public class DataflowWebSocketClient(
 
                         foreach (var item in items)
                         {
-                            // не блокируем поток, если pipeline перегружен
-                            //if (!target.Post(item))
-                            //{
-                            // система не успевает обработать входящий поток
-                            //    logger.LogWarning("Tick skipped due to backpressure");
-                            //}
                             await target.SendAsync(item, pollyCt);
                         }
 

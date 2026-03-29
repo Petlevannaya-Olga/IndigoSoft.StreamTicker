@@ -2,6 +2,7 @@
 using FluentAssertions;
 using IndigoSoft.StreamTicker.Application;
 using IndigoSoft.StreamTicker.Infrastructure;
+using IndigoSoft.StreamTicker.Infrastructure.Pipelines;
 using Microsoft.Extensions.Logging;
 using TickDbContext = IndigoSoft.StreamTicker.Infrastructure.TickDbContext;
 
