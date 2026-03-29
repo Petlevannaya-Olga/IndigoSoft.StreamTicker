@@ -97,6 +97,7 @@ public class DataflowPipeline(
         dedupBlock.LinkTo(batch, linkOptions);
         batch.LinkTo(writer, linkOptions);
 
+        logger.LogInformation("Pipeline started, clients count = {Count}", clients.Count());
         var clientTasks = clients
             .Select(c => c.RunAsync(source, ct))
             .ToArray();

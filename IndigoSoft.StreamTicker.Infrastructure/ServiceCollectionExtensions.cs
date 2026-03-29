@@ -1,4 +1,6 @@
-﻿using IndigoSoft.StreamTicker.Application;
+﻿using System.Threading.Tasks.Dataflow;
+using IndigoSoft.StreamTicker.Application;
+using IndigoSoft.StreamTicker.Domain;
 using IndigoSoft.StreamTicker.Infrastructure.MessageConverters;
 using IndigoSoft.StreamTicker.Infrastructure.Options;
 using IndigoSoft.StreamTicker.Infrastructure.WebSocketClients;
@@ -72,15 +74,15 @@ public static class ServiceCollectionExtensions
                 uri,
                 sp.GetRequiredService<ILogger<BinanceWebSocketConnector>>());
         });
-
+        
         return services;
     }
     
     public static IServiceCollection AddWebSocketClients(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddTransient<DataflowWebSocketClient>(CreateClient<BinanceWebSocketConnector, BinanceMessageConverter>);
-        services.AddTransient<DataflowWebSocketClient>(CreateClient<KrakenWebSocketConnector, KrakenMessageConverter>);
-        services.AddTransient<DataflowWebSocketClient>(CreateClient<ByBitWebSocketConnector, ByBitMessageConverter>);
+        services.AddTransient<IWebSocketClient<ITargetBlock<Tick>>>(CreateClient<BinanceWebSocketConnector, BinanceMessageConverter>);
+        services.AddTransient<IWebSocketClient<ITargetBlock<Tick>>>(CreateClient<KrakenWebSocketConnector, KrakenMessageConverter>);
+        services.AddTransient<IWebSocketClient<ITargetBlock<Tick>>>(CreateClient<ByBitWebSocketConnector, ByBitMessageConverter>);
 
         return services;
     }
