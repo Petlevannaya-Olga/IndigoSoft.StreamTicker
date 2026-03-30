@@ -43,7 +43,7 @@ public class DataflowPipeline(
                 CancellationToken = ct
             });
 
-        var batchBlock = new BatchBlock<Tick>(2000, new GroupingDataflowBlockOptions
+        var batchBlock = new BatchBlock<Tick>(1000, new GroupingDataflowBlockOptions
         {
             BoundedCapacity = 10_000,
             CancellationToken = ct
