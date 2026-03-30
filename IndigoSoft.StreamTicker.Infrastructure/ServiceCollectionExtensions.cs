@@ -101,19 +101,6 @@ public static class ServiceCollectionExtensions
                     sp.GetRequiredService<ILogger<BinanceWebSocketConnector>>());
             });
         
-        // services.AddKeyedSingleton<BinanceWebSocketConnector>("binance-3",
-        //     (sp, key) =>
-        //     {
-        //         var symbols = new[] { "strateth","snglsbtc","snglseth","bqxbtc","bqxeth","kncbtc","knceth","funbtc","funeth","snmbtc","snmeth","neoeth","iotabtc","iotaeth","linkbtc" };
-        //
-        //         var uri = new Uri(
-        //             $"wss://stream.binance.com:9443/stream?streams={string.Join("@trade/", symbols).ToLower()}@trade");
-        //
-        //         return new BinanceWebSocketConnector(
-        //             uri,
-        //             sp.GetRequiredService<ILogger<BinanceWebSocketConnector>>());
-        //     });
-        
         services.AddKeyedSingleton<BinanceWebSocketConnector>("binance-4",
             (sp, key) =>
             {
@@ -135,9 +122,6 @@ public static class ServiceCollectionExtensions
 
         services.AddTransient<IWebSocketClient<ITargetBlock<Tick>>>(sp =>
             CreateClient<BinanceWebSocketConnector, BinanceMessageConverter>(sp, "binance-2"));
-        
-        // services.AddTransient<IWebSocketClient<ITargetBlock<Tick>>>(sp =>
-        //     CreateClient<BinanceWebSocketConnector, BinanceMessageConverter>(sp, "binance-3"));
         
         services.AddTransient<IWebSocketClient<ITargetBlock<Tick>>>(sp =>
             CreateClient<BinanceWebSocketConnector, BinanceMessageConverter>(sp, "binance-4"));
