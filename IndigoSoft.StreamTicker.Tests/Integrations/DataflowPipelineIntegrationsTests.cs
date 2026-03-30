@@ -17,11 +17,11 @@ public class PipelineIntegrationTests(TestFixture fixture) : TestBase(fixture)
         var repository = Get<ITickRepository>();
         var deduplicator = Get<IDeduplicator>();
         var metrics = Get<IMetricsService>();
-        var logger = Get<ILogger<DataflowPipeline>>();
+        var logger = Get<ILogger<Pipeline>>();
 
         var client = new TestDataflowWebSocketClient(100);
 
-        var pipeline = new DataflowPipeline(
+        var pipeline = new Pipeline(
             [client],
             repository,
             deduplicator,
@@ -55,7 +55,7 @@ public class PipelineIntegrationTests(TestFixture fixture) : TestBase(fixture)
 
         var deduplicator = Get<IDeduplicator>();
         var metrics = Get<IMetricsService>();
-        var logger = Get<ILogger<DataflowPipeline>>();
+        var logger = Get<ILogger<Pipeline>>();
 
         var savedBatches = new List<int>();
 
@@ -72,7 +72,7 @@ public class PipelineIntegrationTests(TestFixture fixture) : TestBase(fixture)
 
         var client = new TestDataflowWebSocketClient(5000);
 
-        var pipeline = new DataflowPipeline(
+        var pipeline = new Pipeline(
             [client],
             repository.Object,
             deduplicator,
@@ -97,11 +97,11 @@ public class PipelineIntegrationTests(TestFixture fixture) : TestBase(fixture)
         var repository = Get<ITickRepository>();
         var deduplicator = Get<IDeduplicator>();
         var metrics = Get<IMetricsService>();
-        var logger = Get<ILogger<DataflowPipeline>>();
+        var logger = Get<ILogger<Pipeline>>();
 
         var client = new DuplicateClient(); // отправляет одинаковые ticks
 
-        var pipeline = new DataflowPipeline(
+        var pipeline = new Pipeline(
             [client],
             repository,
             deduplicator,
@@ -134,12 +134,12 @@ public class PipelineIntegrationTests(TestFixture fixture) : TestBase(fixture)
             .Select(_ => new TestDataflowWebSocketClient(20_000))
             .ToArray();
 
-        var pipeline = new DataflowPipeline(
+        var pipeline = new Pipeline(
             clients,
             Get<ITickRepository>(),
             Get<IDeduplicator>(),
             Get<IMetricsService>(),
-            Get<ILogger<DataflowPipeline>>());
+            Get<ILogger<Pipeline>>());
 
         var task = pipeline.RunAsync(CancellationToken.None);
 
@@ -157,12 +157,12 @@ public class PipelineIntegrationTests(TestFixture fixture) : TestBase(fixture)
     [Fact]
     public async Task Should_complete_gracefully()
     {
-        var pipeline = new DataflowPipeline(
+        var pipeline = new Pipeline(
             [new TestDataflowWebSocketClient(1000)],
             Get<ITickRepository>(),
             Get<IDeduplicator>(),
             Get<IMetricsService>(),
-            Get<ILogger<DataflowPipeline>>());
+            Get<ILogger<Pipeline>>());
 
         var task = pipeline.RunAsync(CancellationToken.None);
 
@@ -179,12 +179,12 @@ public class PipelineIntegrationTests(TestFixture fixture) : TestBase(fixture)
         var client1 = new DuplicateClient();
         var client2 = new DuplicateClient();
 
-        var pipeline = new DataflowPipeline(
+        var pipeline = new Pipeline(
             [client1, client2],
             Get<ITickRepository>(),
             Get<IDeduplicator>(),
             Get<IMetricsService>(),
-            Get<ILogger<DataflowPipeline>>());
+            Get<ILogger<Pipeline>>());
 
         var task = pipeline.RunAsync(CancellationToken.None);
 

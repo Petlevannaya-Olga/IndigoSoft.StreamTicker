@@ -18,12 +18,12 @@ public class DataflowPipelineProperties(TestFixture fixture) : TestBase(fixture)
 
         var client = new TestDataflowWebSocketClient(tickCount);
 
-        var pipeline = new DataflowPipeline(
+        var pipeline = new Pipeline(
             [client],
             Get<ITickRepository>(),
             Get<IDeduplicator>(),
             Get<IMetricsService>(),
-            Get<ILogger<DataflowPipeline>>());
+            Get<ILogger<Pipeline>>());
 
         var task = pipeline.RunAsync(CancellationToken.None);
 
@@ -41,12 +41,12 @@ public class DataflowPipelineProperties(TestFixture fixture) : TestBase(fixture)
 
         var client = new DuplicateClient(); // специально генерит дубликаты
 
-        var pipeline = new DataflowPipeline(
+        var pipeline = new Pipeline(
             [client],
             Get<ITickRepository>(),
             Get<IDeduplicator>(),
             Get<IMetricsService>(),
-            Get<ILogger<DataflowPipeline>>());
+            Get<ILogger<Pipeline>>());
 
         await pipeline.RunAsync(CancellationToken.None);
 
@@ -76,12 +76,12 @@ public class DataflowPipelineProperties(TestFixture fixture) : TestBase(fixture)
 
         var client = new TestDataflowWebSocketClient(tickCount);
 
-        var pipeline = new DataflowPipeline(
+        var pipeline = new Pipeline(
             [client],
             repository.Object,
             Get<IDeduplicator>(),
             Get<IMetricsService>(),
-            Get<ILogger<DataflowPipeline>>());
+            Get<ILogger<Pipeline>>());
 
         await pipeline.RunAsync(CancellationToken.None);
 
@@ -105,12 +105,12 @@ public class DataflowPipelineProperties(TestFixture fixture) : TestBase(fixture)
 
         var client = new TestDataflowWebSocketClient(tickCount);
 
-        var pipeline = new DataflowPipeline(
+        var pipeline = new Pipeline(
             [client],
             Get<ITickRepository>(),
             Get<IDeduplicator>(),
             Get<IMetricsService>(),
-            Get<ILogger<DataflowPipeline>>());
+            Get<ILogger<Pipeline>>());
 
         await pipeline.RunAsync(CancellationToken.None);
 

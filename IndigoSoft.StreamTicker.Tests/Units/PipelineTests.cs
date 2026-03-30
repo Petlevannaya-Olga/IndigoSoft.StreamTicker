@@ -8,7 +8,7 @@ using Moq;
 
 namespace IndigoSoft.StreamTicker.Tests.Units;
 
-public class DataflowPipelineTests
+public class PipelineTests
 {
     private Tick CreateTick(
         string symbol = "AAPL",
@@ -26,7 +26,7 @@ public class DataflowPipelineTests
         var repository = new Mock<ITickRepository>();
         var deduplicator = new Mock<IDeduplicator>();
         var metrics = new Mock<IMetricsService>();
-        var logger = new Mock<ILogger<DataflowPipeline>>();
+        var logger = new Mock<ILogger<Pipeline>>();
 
         deduplicator.Setup(d => d.IsDuplicate(It.IsAny<Tick>()))
             .Returns(false);
@@ -59,7 +59,7 @@ public class DataflowPipelineTests
                 return Task.CompletedTask;
             });
 
-        var pipeline = new DataflowPipeline(
+        var pipeline = new Pipeline(
             [client.Object],
             repository.Object,
             deduplicator.Object,
@@ -88,7 +88,7 @@ public class DataflowPipelineTests
         var repository = new Mock<ITickRepository>();
         var deduplicator = new Mock<IDeduplicator>();
         var metrics = new Mock<IMetricsService>();
-        var logger = new Mock<ILogger<DataflowPipeline>>();
+        var logger = new Mock<ILogger<Pipeline>>();
 
         deduplicator.Setup(d => d.IsDuplicate(It.IsAny<Tick>()))
             .Returns(true);
@@ -103,7 +103,7 @@ public class DataflowPipelineTests
                 return Task.CompletedTask;
             });
 
-        var pipeline = new DataflowPipeline(
+        var pipeline = new Pipeline(
             [client.Object],
             repository.Object,
             deduplicator.Object,
@@ -126,7 +126,7 @@ public class DataflowPipelineTests
         var repository = new Mock<ITickRepository>();
         var deduplicator = new Mock<IDeduplicator>();
         var metrics = new Mock<IMetricsService>();
-        var logger = new Mock<ILogger<DataflowPipeline>>();
+        var logger = new Mock<ILogger<Pipeline>>();
 
         deduplicator.Setup(d => d.IsDuplicate(It.IsAny<Tick>()))
             .Returns(false);
@@ -141,7 +141,7 @@ public class DataflowPipelineTests
                 return Task.CompletedTask;
             });
 
-        var pipeline = new DataflowPipeline(
+        var pipeline = new Pipeline(
             [client.Object],
             repository.Object,
             deduplicator.Object,
@@ -162,7 +162,7 @@ public class DataflowPipelineTests
         var repository = new Mock<ITickRepository>();
         var deduplicator = new Mock<IDeduplicator>();
         var metrics = new Mock<IMetricsService>();
-        var logger = new Mock<ILogger<DataflowPipeline>>();
+        var logger = new Mock<ILogger<Pipeline>>();
 
         deduplicator.Setup(d => d.IsDuplicate(It.IsAny<Tick>()))
             .Returns(false);
@@ -181,7 +181,7 @@ public class DataflowPipelineTests
                 return Task.CompletedTask;
             });
 
-        var pipeline = new DataflowPipeline(
+        var pipeline = new Pipeline(
             [client.Object],
             repository.Object,
             deduplicator.Object,
@@ -202,7 +202,7 @@ public class DataflowPipelineTests
         var repository = new Mock<ITickRepository>();
         var deduplicator = new Mock<IDeduplicator>();
         var metrics = new Mock<IMetricsService>();
-        var logger = new Mock<ILogger<DataflowPipeline>>();
+        var logger = new Mock<ILogger<Pipeline>>();
 
         deduplicator.Setup(d => d.IsDuplicate(It.IsAny<Tick>()))
             .Returns(false);
@@ -233,7 +233,7 @@ public class DataflowPipelineTests
                 return Task.CompletedTask;
             });
 
-        var pipeline = new DataflowPipeline(
+        var pipeline = new Pipeline(
             [client.Object],
             repository.Object,
             deduplicator.Object,
@@ -260,7 +260,7 @@ public class DataflowPipelineTests
         var repository = new Mock<ITickRepository>();
         var deduplicator = new Mock<IDeduplicator>();
         var metrics = new Mock<IMetricsService>();
-        var logger = new Mock<ILogger<DataflowPipeline>>();
+        var logger = new Mock<ILogger<Pipeline>>();
 
         deduplicator.Setup(d => d.IsDuplicate(It.IsAny<Tick>()))
             .Returns(false);
@@ -297,7 +297,7 @@ public class DataflowPipelineTests
             })
             .ToArray();
 
-        var pipeline = new DataflowPipeline(
+        var pipeline = new Pipeline(
             clients,
             repository.Object,
             deduplicator.Object,
@@ -329,7 +329,7 @@ public class DataflowPipelineTests
         var repository = new Mock<ITickRepository>();
         var deduplicator = new Mock<IDeduplicator>();
         var metrics = new Mock<IMetricsService>();
-        var logger = new Mock<ILogger<DataflowPipeline>>();
+        var logger = new Mock<ILogger<Pipeline>>();
 
         deduplicator.Setup(d => d.IsDuplicate(It.IsAny<Tick>()))
             .Returns(true);
@@ -344,7 +344,7 @@ public class DataflowPipelineTests
                 return Task.CompletedTask;
             });
 
-        var pipeline = new DataflowPipeline(
+        var pipeline = new Pipeline(
             [client.Object],
             repository.Object,
             deduplicator.Object,
@@ -363,7 +363,7 @@ public class DataflowPipelineTests
         var repository = new Mock<ITickRepository>();
         var deduplicator = new Mock<IDeduplicator>();
         var metrics = new Mock<IMetricsService>();
-        var logger = new Mock<ILogger<DataflowPipeline>>();
+        var logger = new Mock<ILogger<Pipeline>>();
 
         deduplicator.Setup(d => d.IsDuplicate(It.IsAny<Tick>()))
             .Returns(false);
@@ -382,7 +382,7 @@ public class DataflowPipelineTests
                 return Task.CompletedTask;
             });
 
-        var pipeline = new DataflowPipeline(
+        var pipeline = new Pipeline(
             [client.Object],
             repository.Object,
             deduplicator.Object,
@@ -400,7 +400,7 @@ public class DataflowPipelineTests
         var repository = new Mock<ITickRepository>();
         var deduplicator = new Mock<IDeduplicator>();
         var metrics = new Mock<IMetricsService>();
-        var logger = new Mock<ILogger<DataflowPipeline>>();
+        var logger = new Mock<ILogger<Pipeline>>();
 
         deduplicator.Setup(d => d.IsDuplicate(It.IsAny<Tick>()))
             .Returns(false);
@@ -438,7 +438,7 @@ public class DataflowPipelineTests
             })
             .ToArray();
 
-        var pipeline = new DataflowPipeline(
+        var pipeline = new Pipeline(
             clients,
             repository.Object,
             deduplicator.Object,

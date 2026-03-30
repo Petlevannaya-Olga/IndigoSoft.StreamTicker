@@ -47,7 +47,7 @@ try
             services.AddSingleton<IMessageReceiver, DefaultMessageReceiver>();
             services.AddSingleton<IDeduplicator, SlidingWindowDeduplicator>();
             services.AddTransient<IWebSocketPolicy, WebSocketPolicy>();
-            services.AddSingleton<IPipeline, ChannelsPipeline>();
+            services.AddSingleton<IPipeline, Pipeline>();
         })
         .Build();
 

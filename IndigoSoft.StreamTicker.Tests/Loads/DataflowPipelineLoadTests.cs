@@ -17,13 +17,13 @@ public class DataflowPipelineLoadTests(TestFixture fixture) : TestBase(fixture)
         var repository = Get<ITickRepository>();
         var deduplicator = Get<IDeduplicator>();
         var metrics = Get<IMetricsService>();
-        var logger = Get<ILogger<DataflowPipeline>>();
+        var logger = Get<ILogger<Pipeline>>();
 
         var ticksCount = 1_000_000;
 
         var client = new LoadWebSocketClient(ticksCount);
 
-        var pipeline = new DataflowPipeline(
+        var pipeline = new Pipeline(
             [client],
             repository,
             deduplicator,
