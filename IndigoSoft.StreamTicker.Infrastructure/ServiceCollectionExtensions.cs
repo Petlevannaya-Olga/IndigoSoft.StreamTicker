@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks.Dataflow;
+﻿using System.Threading.Channels;
+using System.Threading.Tasks.Dataflow;
 using IndigoSoft.StreamTicker.Application;
 using IndigoSoft.StreamTicker.Domain;
 using IndigoSoft.StreamTicker.Infrastructure.BackgroundServices;
@@ -126,41 +127,41 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
-    public static IServiceCollection AddWebSocketClients(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddWebSocketClients(this IServiceCollection services)
     {
-        services.AddTransient<IWebSocketClient<ITargetBlock<Tick>>>(sp =>
+        services.AddTransient<IWebSocketClient<ChannelWriter<Tick>>>(sp =>
             CreateClient<BinanceWebSocketConnector, BinanceMessageConverter>(sp, "binance-1"));
 
-        services.AddTransient<IWebSocketClient<ITargetBlock<Tick>>>(sp =>
+        services.AddTransient<IWebSocketClient<ChannelWriter<Tick>>>(sp =>
             CreateClient<BinanceWebSocketConnector, BinanceMessageConverter>(sp, "binance-2"));
-        
-        services.AddTransient<IWebSocketClient<ITargetBlock<Tick>>>(sp =>
+
+        services.AddTransient<IWebSocketClient<ChannelWriter<Tick>>>(sp =>
             CreateClient<BinanceWebSocketConnector, BinanceMessageConverter>(sp, "binance-3"));
-        
-        services.AddTransient<IWebSocketClient<ITargetBlock<Tick>>>(sp =>
+
+        services.AddTransient<IWebSocketClient<ChannelWriter<Tick>>>(sp =>
             CreateClient<BinanceWebSocketConnector, BinanceMessageConverter>(sp, "binance-4"));
 
-        services.AddTransient<IWebSocketClient<ITargetBlock<Tick>>>(sp =>
+        services.AddTransient<IWebSocketClient<ChannelWriter<Tick>>>(sp =>
             CreateClient<KrakenWebSocketConnector, KrakenMessageConverter>(sp, "kraken"));
 
-        services.AddTransient<IWebSocketClient<ITargetBlock<Tick>>>(sp =>
+        services.AddTransient<IWebSocketClient<ChannelWriter<Tick>>>(sp =>
             CreateClient<ByBitWebSocketConnector, ByBitMessageConverter>(sp, "bybit"));
 
         return services;
     }
 
-    private static DataflowWebSocketClient CreateClient<TConnector, TConverter>(
+    private static ChannelsWebSocketClient CreateClient<TConnector, TConverter>(
         IServiceProvider sp,
         object key)
         where TConnector : IWebSocketConnector
         where TConverter : IMessageConverter
     {
-        return new DataflowWebSocketClient(
+        return new ChannelsWebSocketClient(
             sp.GetRequiredKeyedService<TConnector>(key),
             sp.GetRequiredService<IMessageReceiver>(),
             sp.GetRequiredService<TConverter>(),
             sp.GetRequiredService<IWebSocketPolicy>(),
-            sp.GetRequiredService<ILogger<DataflowWebSocketClient>>()
+            sp.GetRequiredService<ILogger<ChannelsWebSocketClient>>()
         );
     }
 }

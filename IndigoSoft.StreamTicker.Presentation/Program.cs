@@ -40,14 +40,14 @@ try
                 .AddBackgroundServices()
                 .AddDb(configuration)
                 .AddWebSocketConnectors()
-                .AddWebSocketClients(configuration);
+                .AddWebSocketClients();
 
             services.Configure<ExchangeOptions>(configuration.GetSection("Exchanges"));
 
             services.AddSingleton<IMessageReceiver, DefaultMessageReceiver>();
             services.AddSingleton<IDeduplicator, SlidingWindowDeduplicator>();
             services.AddTransient<IWebSocketPolicy, WebSocketPolicy>();
-            services.AddSingleton<IPipeline, DataflowPipeline>();
+            services.AddSingleton<IPipeline, ChannelsPipeline>();
         })
         .Build();
 

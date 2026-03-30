@@ -1,6 +1,6 @@
 ﻿namespace IndigoSoft.StreamTicker.Application;
 
-public interface IWebSocketClient<in T>
+public interface IWebSocketClient<in TTarget>
 {
-    Task RunAsync(T writer, CancellationToken ct);
+    Task RunAsync(TTarget target, CancellationToken ct);
 }
