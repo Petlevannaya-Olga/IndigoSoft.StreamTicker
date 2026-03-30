@@ -25,24 +25,24 @@ public class DataflowPipeline(
         });
 
         var processBlock = new TransformManyBlock<Tick, Tick>(tick =>
-        {
-            metrics.IncrementIn();
-
-            if (deduplicator.IsDuplicate(tick))
             {
-                metrics.IncrementDeduplicated();
-                return Array.Empty<Tick>();
-            }
+                metrics.IncrementIn();
 
-            metrics.IncrementOut();
-            return [tick];
-        },
-        new ExecutionDataflowBlockOptions
-        {
-            MaxDegreeOfParallelism = Environment.ProcessorCount * 2,
-            EnsureOrdered = false,
-            CancellationToken = ct
-        });
+                if (deduplicator.IsDuplicate(tick))
+                {
+                    metrics.IncrementDeduplicated();
+                    return Array.Empty<Tick>();
+                }
+
+                metrics.IncrementOut();
+                return [tick];
+            },
+            new ExecutionDataflowBlockOptions
+            {
+                MaxDegreeOfParallelism = Environment.ProcessorCount * 2,
+                EnsureOrdered = false,
+                CancellationToken = ct
+            });
 
         var batch = CreateBatchBlock<Tick>(
             batchSize: 2000,
@@ -50,37 +50,37 @@ public class DataflowPipeline(
             ct);
 
         var writer = new ActionBlock<(Tick[] Items, int Count)>(async batchData =>
-        {
-            try
             {
-                if (batchData.Count == 0)
-                    return;
+                try
+                {
+                    if (batchData.Count == 0)
+                        return;
 
-                metrics.IncrementBatch();
-                metrics.IncrementTicksCount(batchData.Count);
-                logger.LogInformation("{TicksCount} ticks saved to Db", batchData.Count);
+                    metrics.IncrementBatch();
+                    metrics.IncrementTicksCount(batchData.Count);
+                    logger.LogInformation("{TicksCount} ticks saved to Db", batchData.Count);
 
-                await repository.SaveBatchAsync(
-                    batchData.Items,
-                    batchData.Count,
-                    ct);
-            }
-            catch (Exception ex)
+                    await repository.SaveBatchAsync(
+                        batchData.Items,
+                        batchData.Count,
+                        ct);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "Save batch failed");
+                }
+                finally
+                {
+                    ArrayPool<Tick>.Shared.Return(batchData.Items);
+                }
+            },
+            new ExecutionDataflowBlockOptions
             {
-                logger.LogError(ex, "Save batch failed");
-            }
-            finally
-            {
-                ArrayPool<Tick>.Shared.Return(batchData.Items);
-            }
-        },
-        new ExecutionDataflowBlockOptions
-        {
-            MaxDegreeOfParallelism = 4,
-            BoundedCapacity = 10,
-            EnsureOrdered = false,
-            CancellationToken = ct
-        });
+                MaxDegreeOfParallelism = 4,
+                BoundedCapacity = 10,
+                EnsureOrdered = false,
+                CancellationToken = ct
+            });
 
         var linkOptions = new DataflowLinkOptions
         {
@@ -125,50 +125,51 @@ public class DataflowPipeline(
         var count = 0;
 
         var input = new ActionBlock<T>(async item =>
-        {
-            T[]? fullBatch = null;
-            var fullSize = 0;
-
-            lock (gate)
             {
-                buffer[count++] = item;
+                T[]? fullBatch = null;
+                var fullSize = 0;
 
-                if (count >= batchSize)
+                lock (gate)
                 {
-                    fullBatch = buffer;
-                    fullSize = count;
+                    buffer[count++] = item;
 
-                    buffer = pool.Rent(batchSize);
-                    count = 0;
+                    if (count >= batchSize)
+                    {
+                        fullBatch = buffer;
+                        fullSize = count;
+
+                        buffer = pool.Rent(batchSize);
+                        count = 0;
+                    }
                 }
-            }
 
-            if (fullBatch != null)
+                if (fullBatch != null)
+                {
+                    try
+                    {
+                        await output.SendAsync((fullBatch, fullSize), ct);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        pool.Return(fullBatch);
+                    }
+                }
+            },
+            new ExecutionDataflowBlockOptions
             {
-                try
-                {
-                    await output.SendAsync((fullBatch, fullSize), ct);
-                }
-                catch (OperationCanceledException)
-                {
-                    pool.Return(fullBatch);
-                }
-            }
-        },
-        new ExecutionDataflowBlockOptions
-        {
-            CancellationToken = ct,
-            MaxDegreeOfParallelism = 1,
-            EnsureOrdered = false
-        });
+                CancellationToken = ct,
+                MaxDegreeOfParallelism = 1,
+                EnsureOrdered = false
+            });
 
         _ = Task.Run(async () =>
         {
             try
             {
-                while (!ct.IsCancellationRequested)
+                using var timer = new PeriodicTimer(timeout);
+
+                while (await timer.WaitForNextTickAsync(ct))
                 {
-                    await Task.Delay(timeout, ct);
                     await FlushAsync();
                 }
             }
@@ -178,7 +179,6 @@ public class DataflowPipeline(
             }
         }, ct);
 
-        // гарантирует завершение flush
         input.Completion.ContinueWith(_ =>
         {
             FlushAsync().GetAwaiter().GetResult();
