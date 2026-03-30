@@ -16,7 +16,7 @@ public class WebSocketPolicy : IWebSocketPolicy
             .Handle<Exception>()
             .CircuitBreakerAsync(
                 exceptionsAllowedBeforeBreaking: 5,
-                durationOfBreak: TimeSpan.FromSeconds(30),
+                durationOfBreak: TimeSpan.FromSeconds(10),
                 onBreak: (ex, breakDelay) =>
                     logger.LogWarning("Circuit broken for {Delay}s", breakDelay.TotalSeconds),
                 onReset: () =>
@@ -32,7 +32,7 @@ public class WebSocketPolicy : IWebSocketPolicy
                 sleepDurationProvider: attempt =>
                 {
                     // Экспоненциальный рост задержки (2, 4, 8, 16, ...)
-                    var baseDelay = Math.Min(30, Math.Pow(2, attempt));
+                    var baseDelay = Math.Min(10, Math.Pow(2, attempt));
 
                     // Декоррелированный jitter
                     var delay = Random.Shared.Next(
